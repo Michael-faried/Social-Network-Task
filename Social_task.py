@@ -71,7 +71,7 @@ def calculate_conductance(G, partition):
     # Return the conductance values for each community
     return conductance_values
 
-print(calculate_conductance(G, partition))
+# print(calculate_conductance(G, partition))
 
 
 
@@ -119,6 +119,8 @@ print(calculate_conductance(G, partition))
 # calculate_conductance(G, partition)
 
 
+
+
 # 2- Modularity internal evaluation
 def calculate_modularity(G):
     """Calculates the modularity of the detected communities and prints the result."""
@@ -145,7 +147,7 @@ def calculate_nmi(G, ground_truth_file):
     # Calculate NMI between detected communities and ground truth communities
     nmi = normalized_mutual_info_score(list(ground_truth_dict.values()), list(partition.values()))
     print("NMI: {0:.3f}".format(nmi))
-
+calculate_nmi(G,node_filepath)
 # Task 3 
 def calculate_pagerank(G):
     """Calculates the PageRank score for each node in the graph and prints the result."""

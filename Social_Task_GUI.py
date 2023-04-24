@@ -13,21 +13,43 @@ class NetworkAnalysisGUI:
         self.master = master
         master.title("Network Analysis GUI")
 
-        # Create buttons for loading edge and node CSV files
-        self.edge_button = tk.Button(master, text="Load Edge CSV", command=self.load_edge_file)
-        self.edge_button.pack()
-
-        self.node_button = tk.Button(master, text="Load Node CSV", command=self.load_node_file)
-        self.node_button.pack()
+        # Create frame for buttons on the left
+        button_frame = tk.Frame(master, width=200)
+        button_frame.pack(side=tk.LEFT, fill=tk.Y)
 
         # Create button for applying Louvain algorithm and visualizing the network graph
-        self.visualize_button = tk.Button(master, text="Apply Louvain Algorithm and Visualize Graph", command=self.visualize_graph)
-        self.visualize_button.pack()
+        self.visualize_button = tk.Button(button_frame, text="Louvain Algorithm 'Visualize Graph'", command=self.visualize_graph)
+        self.visualize_button.pack(pady=10, padx=10, anchor='center')
 
         # Create button for calculating and displaying conductance values
-        self.conductance_button = tk.Button(master, text="Calculate Conductance Values", command=self.calculate_and_display_conductance)
-        self.conductance_button.pack()
+        self.conductance_button = tk.Button(button_frame, text="Calculate Conductance Values", command=self.calculate_and_display_conductance)
+        self.conductance_button.pack(pady=10, anchor='center')
+        self.Modularity_Button = tk.Button(button_frame, text="Modularity", command=self.calculate_modularity)
+        self.Modularity_Button.pack(pady=10, anchor='center')
+        self.Modularity_Button = tk.Button(button_frame, text="NMI VALUE", command=self.calculate_nmi)
+        self.Modularity_Button.pack(pady=10, anchor='center')
+        self.Modularity_Button = tk.Button(button_frame, text="Community Coverage", command=self.calculate_community_coverage)
+        self.Modularity_Button.pack(pady=10, anchor='center')
 
+        # Create frame for output text on the right
+        output_frame = tk.Frame(master, width=200)
+        output_frame.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Create frame for edge and node buttons at top of output text panel
+        button_frame_top = tk.Frame(output_frame)
+        button_frame_top.pack(side=tk.TOP, pady=10)
+
+        # Add edge and node buttons to top frame
+        self.edge_button_top = tk.Button(button_frame_top, text="Load Edge CSV", command=self.load_edge_file)
+        self.edge_button_top.pack(side=tk.LEFT, padx=5)
+
+        self.node_button_top = tk.Button(button_frame_top, text="Load Node CSV", command=self.load_node_file)
+        self.node_button_top.pack(side=tk.LEFT, padx=5)
+
+        # Create text widget to display conductance values
+        self.Text_Panal = tk.Text(output_frame, height=20, width=35)
+        self.Text_Panal.pack(pady=10, anchor='center')
+        
     def load_edge_file(self):
         # Open file dialog to select edge CSV file
         edge_filepath = filedialog.askopenfilename(title="Select Edge CSV File")
@@ -41,6 +63,54 @@ class NetworkAnalysisGUI:
 
         # Load node CSV file into pandas dataframe
         self.node_df = pd.read_csv(node_filepath)
+
+# 2- Modularity internal evaluation
+    def calculate_modularity(self):
+        """Calculates the modularity of the detected communities and prints the result."""
+        G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target",create_using=nx.MultiGraph())
+        partition = best_partition(G)
+        modularity_score = modularity(partition, G)
+        # Delete existing text in the text widget
+        self.Text_Panal.delete('1.0', tk.END)
+        community ="Modularity "
+        # Display conductance values for each community in the text widget
+        self.Text_Panal.insert(tk.END, f"{community} = {modularity_score:.4f}\n")
+
+
+# 4- Calculate NMI External Evaluation
+    def calculate_nmi(self):
+        """Loads the ground truth communities from a CSV file, calculates the NMI between the detected communities
+        and the ground truth communities, and prints the result."""
+        # Load ground truth communities from CSV file
+        ground_truth_file =self.node_df
+        G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target",create_using=nx.MultiGraph())
+        partition = best_partition(G)
+        ground_truth_dict = dict(zip(ground_truth_file['ID'], ground_truth_file['Class']))
+        # Calculate NMI between detected communities and ground truth communities
+        nmi = normalized_mutual_info_score(list(ground_truth_dict.values()), list(partition.values()))
+        # Delete existing text in the text widget
+        self.Text_Panal.delete('1.0', tk.END)
+        community ="NMI VALUE "
+        # Display conductance values for each community in the text widget
+        self.Text_Panal.insert(tk.END, f"{community} = {nmi:.4f}\n")
+
+    def calculate_community_coverage(self):
+        self.Text_Panal.delete('1.0', tk.END)
+        """Calculates the coverage of each community and prints the result."""
+        G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target",create_using=nx.MultiGraph())
+        partition = best_partition(G)
+
+        communities = set(partition.values())
+        for community_id in communities:
+            community_nodes = [node for node in G.nodes() if partition[node] == community_id]
+            internal_edges = G.subgraph(community_nodes).number_of_edges()
+            total_edges = sum([G.degree(node) for node in community_nodes])
+            coverage = internal_edges / total_edges
+            self.Text_Panal.insert(tk.END, f" Community {  community_id} = {coverage:.4f}\n")
+
+        # Delete existing text in the text widget
+        # Display conductance values for each community in the text widget
+
 
     def calculate_conductance(self, G, partition):
         """Calculates the conductance of each community 
@@ -72,7 +142,7 @@ class NetworkAnalysisGUI:
 
     def calculate_and_display_conductance(self):
         # Create network graph from edge dataframe
-        G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target")
+        G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target",create_using=nx.MultiGraph())
 
         # Partition nodes into communities using Louvain algorithm
         partition = best_partition(G)
@@ -80,17 +150,13 @@ class NetworkAnalysisGUI:
         # Calculate conductance values for each community
         conductance_values = self.calculate_conductance(G, partition)
 
-        # Clear previous conductance values displayed in the label widget
-        for widget in self.master.winfo_children():
-            if isinstance(widget, tk.Label) and widget['text'].startswith('community'):
-                widget.destroy()
+        # Delete existing text in the text widget
+        self.Text_Panal.delete('1.0', tk.END)
 
-        # Display conductance values for each community
-        conductance_text = ''
+        # Display conductance values for each community in the text widget
         for community, conductance in conductance_values.items():
-            conductance_text += f"{community} = {conductance:.4f}\n"
-        conductance_label = tk.Label(self.master, text=conductance_text)
-        conductance_label.pack()
+            self.Text_Panal.insert(tk.END, f"{community} = {conductance:.4f}\n")
+
 
     def visualize_graph(self):
         # Create network graph from edge dataframe
@@ -119,19 +185,11 @@ class NetworkAnalysisGUI:
         # Embed the plot in the GUI using a canvas
         canvas = FigureCanvasTkAgg(fig, master=self.master)
         canvas.draw()
-        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-
+        canvas.get_tk_widget().place(relx=0.5, rely=0.5, anchor=tk.CENTER, width=800, height=600)
 
 root = tk.Tk()
 root.geometry("1000x600")
 gui = NetworkAnalysisGUI(root)
 root.mainloop()
-
-
-
-
-
-
-
 
 
