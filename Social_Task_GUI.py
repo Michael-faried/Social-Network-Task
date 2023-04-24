@@ -94,7 +94,7 @@ class NetworkAnalysisGUI:
 
     def visualize_graph(self):
         # Create network graph from edge dataframe
-        G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target")
+        G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target",create_using=nx.MultiGraph())
 
         # Partition nodes into communities using Louvain algorithm
         partition = best_partition(G)
@@ -106,7 +106,7 @@ class NetworkAnalysisGUI:
         pos = nx.spring_layout(G)
         cmap = plt.cm.tab20
         node_colors = [partition[node] for node in G.nodes()]
-        node_sizes = [G.degree(node) * 10 for node in G.nodes()]
+        node_sizes = [G.degree(node) for node in G.nodes()]
         fig, ax = plt.subplots()
         nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax)
         nx.draw_networkx_edges(G, pos, ax=ax)
@@ -123,6 +123,7 @@ class NetworkAnalysisGUI:
 
 
 root = tk.Tk()
+root.geometry("1000x600")
 gui = NetworkAnalysisGUI(root)
 root.mainloop()
 

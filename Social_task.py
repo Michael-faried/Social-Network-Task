@@ -8,10 +8,9 @@ import matplotlib.pyplot as plt
 edge_filepath = pd.read_csv("primaryschool_Edges.csv")
 node_filepath = pd.read_csv("metadata_primaryschool_Nodes.csv")
 #print(edge_filepath)
-G = nx.from_pandas_edgelist(edge_filepath,source="Source",target="Target")
-# type(G)
-# print("Number of nodes: ", G.number_of_nodes())
-# print("Number of edges: ", G.number_of_edges())
+G = nx.from_pandas_edgelist(edge_filepath,source="Source",target="Target",create_using=nx.MultiGraph())
+print("Number of nodes: ", G.number_of_nodes())
+print("Number of edges: ", G.number_of_edges())
 
 # Task 1 
 #(Louvain algorithm) Find the communities using Louvain algorithm
@@ -25,7 +24,7 @@ def visualize_communities(G):
     pos = nx.spring_layout(G)
     cmap = plt.cm.tab20
     node_colors = [partition[node] for node in G.nodes()]
-    node_sizes = [G.degree(node) * 10 for node in G.nodes()]
+    node_sizes = [G.degree(node) for node in G.nodes()]
     nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap)
     nx.draw_networkx_edges(G, pos)
     labels = {node: node for node in G.nodes()}
@@ -34,6 +33,12 @@ def visualize_communities(G):
     plt.colorbar(mappable=plt.cm.ScalarMappable(cmap=cmap), label="Community")
     plt.axis('off')
     plt.show()
+
+
+
+
+# Task 2 At least 3 community detection evaluations ( internal and external evaluation)
+# 1- Conductance internal evaluation
 
 
 def calculate_conductance(G, partition):
@@ -72,45 +77,48 @@ print(calculate_conductance(G, partition))
 
 
 
-# Task 2 At least 3 community detection evaluations ( internal and external evaluation)
-# 1- Conductance internal evaluation
-def calculate_conductance(G, partition):
-    """Calculates the conductance of each community 
-    and prints the conductance values for each community."""
-    def conductance(G, community):
-        Eoc = 0
-        Ec = 0
-        for node in community:
-            neighbors = set(G.neighbors(node))
-            for neighbor in neighbors:
-                if neighbor not in community:
-                    if G.has_edge(node, neighbor):
-                        Eoc += G[node][neighbor]['weight'] if G.is_directed() else 1 
-                        # it adds the weight of the edge (or 1 if the graph is unweighted) to Eoc.
-                else:
-                    Ec += G[node][neighbor]['weight'] if G.is_directed() else 1
-                    # it adds the weight of the edge (or 1 if the graph is unweighted) to Ec.
-        if Ec == 0:
-            return 1
-        else:
-            return 2 * Eoc / (2 * Ec + Eoc)
 
-    communities = {c: [] for c in set(partition.values())}
-    for node, community in partition.items():
-        communities[community].append(node)
 
-    conductance_values = {c: conductance(G, communities[c]) for c in communities}
 
-    # Print the conductance values for each community
-    for c, value in conductance_values.items():
-        print(f"Community {c}: conductance = {value}")
+# def calculate_conductance(G, partition):
+#     """Calculates the conductance of each community 
+#     and prints the conductance values for each community."""
+#     def conductance(G, community):
+#         Eoc = 0
+#         Ec = 0
+#         for node in community:
+#             neighbors = set(G.neighbors(node))
+#             for neighbor in neighbors:
+#                 if neighbor not in community:
+#                     if G.has_edge(node, neighbor):
+#                         Eoc += G[node][neighbor]['weight'] if G.is_directed() else 1 
+#                         # it adds the weight of the edge (or 1 if the graph is unweighted) to Eoc.
+#                 else:
+#                     Ec += G[node][neighbor]['weight'] if G.is_directed() else 1
+#                     # it adds the weight of the edge (or 1 if the graph is unweighted) to Ec.
+#         if Ec == 0:
+#             return 1
+#         else:
+#             return 2 * Eoc / (2 * Ec + Eoc)
 
-    # It is normal for the conductance values to change each time you run the code.
-    #  The Louvain algorithm is a randomized algorithm that uses heuristics to optimize the modularity of the graph partition. 
-    # Therefore, the algorithm may produce slightly different results each time it is run,
-    #  even if the input graph is the same.
+#     communities = {c: [] for c in set(partition.values())}
+#     for node, community in partition.items():
+#         communities[community].append(node)
 
-calculate_conductance(G, partition)
+#     conductance_values = {c: conductance(G, communities[c]) for c in communities}
+
+#     # Print the conductance values for each community
+#     for c, value in conductance_values.items():
+#         print(f"Community {c}: conductance = {value}")
+
+#     # It is normal for the conductance values to change each time you run the code.
+#     #  The Louvain algorithm is a randomized algorithm that uses heuristics to optimize the modularity of the graph partition. 
+#     # Therefore, the algorithm may produce slightly different results each time it is run,
+#     #  even if the input graph is the same.
+
+# calculate_conductance(G, partition)
+
+
 # 2- Modularity internal evaluation
 def calculate_modularity(G):
     """Calculates the modularity of the detected communities and prints the result."""
