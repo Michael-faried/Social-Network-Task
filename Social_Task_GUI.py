@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import ttk
 
 
 class NetworkAnalysisGUI:
@@ -14,76 +15,80 @@ class NetworkAnalysisGUI:
         master.title("Network Analysis GUI")
 
         # Create frame for buttons on the left
-        button_frame = tk.Frame(master, width=200)
+        button_frame = tk.Frame(master, width=200,background="#58D68D")
         button_frame.pack(side=tk.LEFT, fill=tk.Y)
+        style = ttk.Style()
+        style.configure("Custom.TButton", background="#58D68D", foreground="black",
+                         font=("Arial", 10, "bold"), padding=5, borderwidth=3, relief="raised")
 
 
-        text_label = tk.Label(button_frame, text=" Apply Louvain Algorithm & Visualize Graph ", font=("TkDefaultFont", 12,"bold"))
-        text_label.pack(pady=(20,0),padx=10)
+        text_label = tk.Label(button_frame, text="Apply Louvain Algorithm &Visualize ", font=("TkDefaultFont", 12,"bold"),background="#58D68D")
+        text_label.pack(pady=(15,0),padx=10)
+
         # Create button for applying Louvain algorithm and visualizing the network graph
-        self.visualize_button = tk.Button(button_frame, text=" Louvain Algorithm", command=self.visualize_graph)
-        self.visualize_button.pack(pady=10, padx=10, anchor='center')
+        self.visualize_button =  ttk.Button(button_frame, style="Custom.TButton",text=" Louvain Algorithm", command=self.visualize_graph)
+        self.visualize_button.pack(pady=5, padx=10, anchor='center')
 
-
-        text_label = tk.Label(button_frame, text=" Community detection evaluations ", font=("TkDefaultFont", 12,"bold"))
+        text_label = tk.Label(button_frame, text=" Community detection evaluations ", font=("TkDefaultFont", 12,"bold"),background="#58D68D")
         text_label.pack(pady=(15,0),padx=10)
         # Create button for calculating and displaying conductance values
-        self.conductance_button = tk.Button(button_frame, text=" Conductance Values", command=self.calculate_and_display_conductance,width=20)
+        self.conductance_button = ttk.Button(button_frame,style="Custom.TButton", text=" Conductance Values", command=self.calculate_and_display_conductance)
         self.conductance_button.pack(pady=10, anchor='center')
 
-        self.Modularity_Button = tk.Button(button_frame, text=" Modularity", command=self.calculate_modularity,width=20)
+        self.Modularity_Button = ttk.Button(button_frame,style="Custom.TButton", text=" Modularity", command=self.calculate_modularity,width=20)
         self.Modularity_Button.pack(pady=5, anchor='center')
 
-        self.NMI_Button = tk.Button(button_frame, text=" NMI VALUE", command=self.calculate_nmi,width=20)
+        self.NMI_Button = ttk.Button(button_frame,style="Custom.TButton", text=" NMI VALUE", command=self.calculate_nmi,width=20)
         self.NMI_Button.pack(pady=5, anchor='center')
 
-        self.CC_Button = tk.Button(button_frame, text=" Community Coverage", command=self.calculate_community_coverage,width=20)
+        self.CC_Button = ttk.Button(button_frame,style="Custom.TButton", text=" Community Coverage", command=self.calculate_community_coverage,width=20)
         self.CC_Button.pack(pady=5, anchor='center')
 
 
         # # Create a label for the text
-        text_label = tk.Label(button_frame, text="Filter Nodes Based on Centrality", font=("TkDefaultFont", 12,"bold"))
+        text_label = tk.Label(button_frame, text="Filter Nodes Based on Centrality", font=("TkDefaultFont", 12,"bold"),background="#58D68D")
         text_label.pack(pady=(15,0),padx=10)
-        self.filter_degree_centrality_btn = tk.Button(button_frame, text=" degree centrality", command=self.filter_degree_centrality)
+        self.filter_degree_centrality_btn = ttk.Button(button_frame,style="Custom.TButton", text=" degree centrality", command=self.filter_degree_centrality)
         self.filter_degree_centrality_btn.pack(pady=5, padx=10, anchor='center')
 
-        self.filter_Betweeness_centrality_btn = tk.Button(button_frame, text="  Betweeness centrality", command=self.filter_betweenness_centrality)
+        self.filter_Betweeness_centrality_btn = ttk.Button(button_frame,style="Custom.TButton", text="  Betweeness centrality", command=self.filter_betweenness_centrality)
         self.filter_Betweeness_centrality_btn.pack(pady=5, padx=10, anchor='center')
 
-        self.filter_eigenvector_centrality_btn = tk.Button(button_frame, text="  Eigenvector centrality", command=self.filter_betweenness_centrality)
+        self.filter_eigenvector_centrality_btn = ttk.Button(button_frame,style="Custom.TButton", text="  Eigenvector centrality", command=self.filter_eigenvector_centrality)
         self.filter_eigenvector_centrality_btn.pack(pady=5, padx=10, anchor='center')
 
-        self.filter_harmonic_centrality_btn = tk.Button(button_frame, text="  Harmonic centrality", command=self.filter_harmonic_centrality)
+        self.filter_harmonic_centrality_btn = ttk.Button(button_frame,style="Custom.TButton", text="  Harmonic centrality", command=self.filter_harmonic_centrality)
         self.filter_harmonic_centrality_btn.pack(pady=5, padx=10, anchor='center')
 
-        self.filter_closeness_centrality_btn = tk.Button(button_frame, text="  Closeness centrality", command=self.filter_closeness_centrality)
+        self.filter_closeness_centrality_btn = ttk.Button(button_frame,style="Custom.TButton", text="  Closeness centrality", command=self.filter_closeness_centrality)
         self.filter_closeness_centrality_btn.pack(pady=5, padx=10, anchor='center')
 
 
 
-        text_label = tk.Label(button_frame, text=" link analysis technique ", font=("TkDefaultFont", 12,"bold"))
+        text_label = tk.Label(button_frame, text=" link analysis technique ", font=("TkDefaultFont", 12,"bold"),background="#58D68D")
         text_label.pack(pady=(15,0))
-        self.PageRank_Button = tk.Button(button_frame, text=" Nodes Page Rank ", command=self.calculate_pagerank)
+        self.PageRank_Button = ttk.Button(button_frame,style="Custom.TButton", text=" Nodes Page Rank ", command=self.calculate_pagerank)
         self.PageRank_Button.pack(pady=5, anchor='center')
 
 
         # Create frame for output text on the right
-        output_frame = tk.Frame(master, width=200)
+        output_frame = tk.Frame(master, width=200,background="#58D68D")
         output_frame.pack(side=tk.RIGHT, fill=tk.Y)
 
         # Create frame for edge and node buttons at top of output text panel
-        button_frame_top = tk.Frame(output_frame)
+        button_frame_top = tk.Frame(output_frame,background="#58D68D")
         button_frame_top.pack(side=tk.TOP, pady=10)
-
+        text_label = tk.Label(button_frame_top, text=" Load CSV Data ", font=("TkDefaultFont", 12,"bold"),background="#58D68D")
+        text_label.pack(pady=(10,0),padx=10)
         # Add edge and node buttons to top frame
-        self.edge_button_top = tk.Button(button_frame_top, text="Load Edge CSV", command=self.load_edge_file)
+        self.edge_button_top = ttk.Button(button_frame_top,style="Custom.TButton", text="Load Edge CSV", command=self.load_edge_file)
         self.edge_button_top.pack(side=tk.LEFT, padx=5,pady=(20,10))
 
-        self.node_button_top = tk.Button(button_frame_top, text="Load Node CSV", command=self.load_node_file)
+        self.node_button_top = ttk.Button(button_frame_top,style="Custom.TButton", text="Load Node CSV", command=self.load_node_file)
         self.node_button_top.pack(side=tk.LEFT, padx=5,pady=(20,10))
 
         # Create text widget to display conductance values
-        self.Text_Panal = tk.Text(output_frame, height=30, width=35)
+        self.Text_Panal = tk.Text(output_frame, height=30, width=35,background="#D5F5E3")
         self.Text_Panal.pack(pady=10, anchor='center')
         
 
@@ -111,7 +116,7 @@ class NetworkAnalysisGUI:
         # Delete existing text in the text widget
         self.Text_Panal.delete('1.0', tk.END)
         community ="Modularity "
-        self.Text_Panal.insert(tk.END, "\n")
+        self.Text_Panal.insert(tk.END, "          Internal evaluation      \n")
         # Display conductance values for each community in the text widget
         self.Text_Panal.insert(tk.END, "  "+f"{community} = {modularity:.4f}\n")
 
@@ -255,7 +260,7 @@ class NetworkAnalysisGUI:
         pos = nx.spring_layout(G)
         cmap = plt.cm.tab20
         red_nodes = top_nodes.index
-        node_colors = ['red' if node in red_nodes else 'grey' for node in G.nodes()]
+        node_colors = ['red' if node in red_nodes else '#F8C471' for node in G.nodes()]
         node_sizes = [G.degree(node) * 3 if node in red_nodes else G.degree(node) for node in G.nodes()]
         fig, ax = plt.subplots()
         nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax)
@@ -292,7 +297,7 @@ class NetworkAnalysisGUI:
         pos = nx.spring_layout(G)
         cmap = plt.cm.tab20
         red_nodes = top_nodes.index
-        node_colors = ['red' if node in red_nodes else 'grey' for node in G.nodes()]
+        node_colors = ['red' if node in red_nodes else '#AED6F1' for node in G.nodes()]
         node_sizes = [G.degree(node) * 3 if node in red_nodes else G.degree(node) for node in G.nodes()]
         fig, ax = plt.subplots()
         nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax)
@@ -308,42 +313,41 @@ class NetworkAnalysisGUI:
         canvas.get_tk_widget().place(relx=0.5, rely=0.5, anchor=tk.CENTER, width=800, height=600)
 
     def filter_eigenvector_centrality(self):
-        # Create network graph from edge dataframe
-        G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.MultiGraph())
-        G = nx.Graph(G)
+            # Create network graph from edge dataframe
+            G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.MultiGraph())
+            G = nx.Graph(G)
 
-        # Compute degree centrality for each node and create a DataFrame to store the results
-        eigenvector_centrality = nx.eigenvector_centrality(G)
+            # Compute degree centrality for each node and create a DataFrame to store the results
+            eigenvector_centrality = nx.eigenvector_centrality(G)
 
-        df = pd.DataFrame(index=G.nodes())
-        df.index.name = 'Node ID'
-        df['eigenvector_centrality'] = pd.Series(eigenvector_centrality).round(3)
-        df = df.sort_values(by='eigenvector_centrality', ascending=False)
+            df1 = pd.DataFrame(index=G.nodes())
+            df1.index.name = 'Node ID'
+            df1['eigenvector_centrality'] = pd.Series(eigenvector_centrality).round(3)
+            df1 = df1.sort_values(by='eigenvector_centrality', ascending=False)
+            # Insert degree centrality values in the Text_Panal
+            self.Text_Panal.delete('1.0', tk.END)
+            self.Text_Panal.insert('1.0', df1.to_string())
 
-        # Insert degree centrality values in the Text_Panal
-        self.Text_Panal.delete('1.0', tk.END)
-        self.Text_Panal.insert('1.0', df.to_string())
+            # Generate visualization
+            top_nodes = df1.head(10)
+            pos = nx.spring_layout(G)
+            cmap = plt.cm.tab20
+            red_nodes = top_nodes.index
+            node_colors = ['red' if node in red_nodes else '#F7DC6F' for node in G.nodes()]
+            node_sizes = [G.degree(node) * 3 if node in red_nodes else G.degree(node) for node in G.nodes()]
+            fig, ax = plt.subplots()
+            nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax)
+            nx.draw_networkx_edges(G, pos, ax=ax)
+            labels = {node: node for node in red_nodes}
+            nx.draw_networkx_labels(G, pos, labels=labels, font_size=7, ax=ax)
+            plt.title('Top 10 eigenvector Centrality Nodes')
+            plt.axis('off')
 
-        # Generate visualization
-        top_nodes = df.head(10)
-        pos = nx.spring_layout(G)
-        cmap = plt.cm.tab20
-        red_nodes = top_nodes.index
-        node_colors = ['red' if node in red_nodes else 'grey' for node in G.nodes()]
-        node_sizes = [G.degree(node) * 3 if node in red_nodes else G.degree(node) for node in G.nodes()]
-        fig, ax = plt.subplots()
-        nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax)
-        nx.draw_networkx_edges(G, pos, ax=ax)
-        labels = {node: node for node in red_nodes}
-        nx.draw_networkx_labels(G, pos, labels=labels, font_size=7, ax=ax)
-        plt.title('Top 10 Eigenvector Centrality Nodes')
-        plt.axis('off')
-
-        # Embed the plot in the GUI using a canvas
-        canvas = FigureCanvasTkAgg(fig, master=self.master)
-        canvas.draw()
-        canvas.get_tk_widget().place(relx=0.5, rely=0.5, anchor=tk.CENTER, width=800, height=600)
-
+            # Embed the plot in the GUI using a canvas
+            canvas = FigureCanvasTkAgg(fig, master=self.master)
+            canvas.draw()
+            canvas.get_tk_widget().place(relx=0.5, rely=0.5, anchor=tk.CENTER, width=800, height=600)
+ 
     def filter_harmonic_centrality(self):
             # Create network graph from edge dataframe
             G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.MultiGraph())
@@ -366,7 +370,7 @@ class NetworkAnalysisGUI:
             pos = nx.spring_layout(G)
             cmap = plt.cm.tab20
             red_nodes = top_nodes.index
-            node_colors = ['red' if node in red_nodes else 'grey' for node in G.nodes()]
+            node_colors = ['red' if node in red_nodes else '#55F7AB' for node in G.nodes()]
             node_sizes = [G.degree(node) * 3 if node in red_nodes else G.degree(node) for node in G.nodes()]
             fig, ax = plt.subplots()
             nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax)
@@ -403,7 +407,7 @@ class NetworkAnalysisGUI:
             pos = nx.spring_layout(G)
             cmap = plt.cm.tab20
             red_nodes = top_nodes.index
-            node_colors = ['red' if node in red_nodes else 'grey' for node in G.nodes()]
+            node_colors = ['red' if node in red_nodes else 'yellow' for node in G.nodes()]
             node_sizes = [G.degree(node) * 3 if node in red_nodes else G.degree(node) for node in G.nodes()]
             fig, ax = plt.subplots()
             nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax)
@@ -422,6 +426,8 @@ class NetworkAnalysisGUI:
 root = tk.Tk()
 root.geometry("1000x600")
 gui = NetworkAnalysisGUI(root)
+root.configure(bg="#D5F5E3")
+
 root.mainloop()
 
 
