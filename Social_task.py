@@ -36,7 +36,6 @@ def visualize_communities(G):
 
 
 
-
 # Task 2 At least 3 community detection evaluations ( internal and external evaluation)
 # 1- Conductance internal evaluation
 
@@ -76,10 +75,119 @@ def calculate_conductance(G, partition):
 
 
 
+# 2- Modularity internal evaluation
+def calculate_modularity(G):
+    """Calculates the modularity of the detected communities and prints the result."""
+    communities=list(nx.algorithms.community.greedy_modularity_communities(G))
+    modularity=nx.algorithms.community.modularity(G,communities)
+    #print(modularity)
+    print(f"The modularity of the detected communities is : {modularity:.3f}")
+
+# 3- Calculate coverage of each community
+def calculate_community_coverage(G):
+    """Calculates the coverage of each community and prints the result."""
+    communities = set(partition.values())
+    for community_id in communities:
+        community_nodes = [node for node in G.nodes() if partition[node] == community_id]
+        internal_edges = G.subgraph(community_nodes).number_of_edges()
+        total_edges = sum([G.degree(node) for node in community_nodes])
+        coverage = internal_edges / total_edges
+        print(f"The coverage of community {community_id} is {coverage:.3f}")
+
+# 4- Calculate NMI External Evaluation
+def calculate_nmi(G, ground_truth_file):
+    """Loads the ground truth communities from a CSV file, calculates the NMI between the detected communities
+    and the ground truth communities, and prints the result."""
+    # Load ground truth communities from CSV file
+    ground_truth_dict = dict(zip(ground_truth_file['ID'], ground_truth_file['Class']))
+    # Calculate NMI between detected communities and ground truth communities
+    nmi = normalized_mutual_info_score(list(ground_truth_dict.values()), list(partition.values()))
+    print("NMI: {0:.3f}".format(nmi))
+# Task 3 
+def calculate_pagerank(G):
+    """Calculates the PageRank score for each node in the graph and prints the result."""
+    pagerank = nx.pagerank(G)
+    for node, score in sorted(pagerank.items(), key=lambda x: x[1], reverse=True):
+        print(f"Node {node}: PageRank score = {score:.3f}")
+
+# Task 4 Filtering nodes based on centrality measures (use at least three centrality measures)
+# def compute_centralities(G):
+#     """Computes different centrality measures for each node in the graph 
+#     and returns a DataFrame with the results."""
+#     G = nx.Graph(G)
+
+#     degree_centrality = nx.degree_centrality(G)
+#     betweenness_centrality = nx.betweenness_centrality(G)
+#     eigenvector_centrality = nx.eigenvector_centrality(G)
+#     harmonic_centrality = nx.harmonic_centrality(G)
+#     closeness_centrality = nx.closeness_centrality(G)
+
+#     # Create a DataFrame to store the centrality values for each node
+#     df = pd.DataFrame(index=G.nodes())
+#     df.index.name = 'Node ID'
+#     df['degree'] = pd.Series(dict(G.degree())).astype(int)
+#     df['degree_centrality'] = pd.Series(degree_centrality).round(3)
+#     df['betweenness_centrality'] = pd.Series(betweenness_centrality).round(3)
+#     df['eigenvector_centrality'] = pd.Series(eigenvector_centrality).round(3)
+#     df['harmonic_centrality'] = pd.Series(harmonic_centrality).round(3)
+#     df['closeness_centrality'] = pd.Series(closeness_centrality).round(3)
+
+#     df = df.sort_values(by='Node ID')
+#     # Export the DataFrame to a CSV file
+#     #df.to_csv('C:/Users/MSI-PC/Desktop/Social Network Task/output.csv')        
+#     # Generate visualization
+#     pos = nx.spring_layout(G)
+#     cmap = plt.cm.tab20
+#     node_colors = [partition[node] for node in G.nodes()]
+#     node_sizes = [G.degree(node) for node in G.nodes()]
+#     nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap)
+#     nx.draw_networkx_edges(G, pos)
+#     labels = {node: node for node in G.nodes()}
+#     nx.draw_networkx_labels(G, pos, labels=labels,font_size=5)
+#     plt.title('Louvain algorithm')
+#     plt.colorbar(mappable=plt.cm.ScalarMappable(cmap=cmap), label="Community")
+#     plt.axis('off')
+#     plt.show()
+
+def compute_centralities(G):
+    """Computes different centrality measures for each node in the graph 
+    and returns a DataFrame with the results."""
+    G = nx.Graph(G)
+    degree_centrality = nx.degree_centrality(G)
+    betweenness_centrality = nx.betweenness_centrality(G)
+    eigenvector_centrality = nx.eigenvector_centrality(G)
+    harmonic_centrality = nx.harmonic_centrality(G)
+    closeness_centrality = nx.closeness_centrality(G)
+
+    # Create a DataFrame to store the centrality values for each node
+    df = pd.DataFrame(index=G.nodes())
+    df.index.name = 'Node ID'
+    df['degree'] = pd.Series(dict(G.degree())).astype(int)
+    df['degree_centrality'] = pd.Series(degree_centrality).round(3)
+    df['betweenness_centrality'] = pd.Series(betweenness_centrality).round(3)
+    df['eigenvector_centrality'] = pd.Series(eigenvector_centrality).round(3)
+    df['harmonic_centrality'] = pd.Series(harmonic_centrality).round(3)
+    df['closeness_centrality'] = pd.Series(closeness_centrality).round(3)
+
+    df = df.sort_values(by='betweenness_centrality')
+    # Export the DataFrame to a CSV file
+    df.to_csv('C:/Users/MSI-PC/Desktop/Social Network Task/output.csv')        
+    return df
+
+compute_centralities(G)
 
 
 
 
+
+
+
+
+
+# x= compute_centralities(G)
+# print(x)
+
+# calculate_modularity(G)
 # def calculate_conductance(G, partition):
 #     """Calculates the conductance of each community 
 #     and prints the conductance values for each community."""
@@ -117,69 +225,4 @@ def calculate_conductance(G, partition):
 #     #  even if the input graph is the same.
 
 # calculate_conductance(G, partition)
-
-
-
-
-# 2- Modularity internal evaluation
-def calculate_modularity(G):
-    """Calculates the modularity of the detected communities and prints the result."""
-    modularity_score = modularity(partition, G)
-    print(f"The modularity of the detected communities is : {modularity_score:.3f}")
-
-# 3- Calculate coverage of each community
-def calculate_community_coverage(G):
-    """Calculates the coverage of each community and prints the result."""
-    communities = set(partition.values())
-    for community_id in communities:
-        community_nodes = [node for node in G.nodes() if partition[node] == community_id]
-        internal_edges = G.subgraph(community_nodes).number_of_edges()
-        total_edges = sum([G.degree(node) for node in community_nodes])
-        coverage = internal_edges / total_edges
-        print(f"The coverage of community {community_id} is {coverage:.3f}")
-
-# 4- Calculate NMI External Evaluation
-def calculate_nmi(G, ground_truth_file):
-    """Loads the ground truth communities from a CSV file, calculates the NMI between the detected communities
-    and the ground truth communities, and prints the result."""
-    # Load ground truth communities from CSV file
-    ground_truth_dict = dict(zip(ground_truth_file['ID'], ground_truth_file['Class']))
-    # Calculate NMI between detected communities and ground truth communities
-    nmi = normalized_mutual_info_score(list(ground_truth_dict.values()), list(partition.values()))
-    print("NMI: {0:.3f}".format(nmi))
-calculate_nmi(G,node_filepath)
-# Task 3 
-def calculate_pagerank(G):
-    """Calculates the PageRank score for each node in the graph and prints the result."""
-    pagerank = nx.pagerank(G)
-    for node, score in sorted(pagerank.items(), key=lambda x: x[1], reverse=True):
-        print(f"Node {node}: PageRank score = {score:.3f}")
-
-# Task 4 Filtering nodes based on centrality measures (use at least three centrality measures)
-def compute_centralities(G):
-    """Computes different centrality measures for each node in the graph 
-    and returns a DataFrame with the results."""
-
-    degree_centrality = nx.degree_centrality(G)
-    betweenness_centrality = nx.betweenness_centrality(G)
-    eigenvector_centrality = nx.eigenvector_centrality(G)
-    harmonic_centrality = nx.harmonic_centrality(G)
-    closeness_centrality = nx.closeness_centrality(G)
-
-    # Create a DataFrame to store the centrality values for each node
-    df = pd.DataFrame(index=G.nodes())
-    df.index.name = 'Node ID'
-    df['degree'] = pd.Series(dict(G.degree())).astype(int)
-    df['degree_centrality'] = pd.Series(degree_centrality).round(3)
-    df['betweenness_centrality'] = pd.Series(betweenness_centrality).round(3)
-    df['eigenvector_centrality'] = pd.Series(eigenvector_centrality).round(3)
-    df['harmonic_centrality'] = pd.Series(harmonic_centrality).round(3)
-    df['closeness_centrality'] = pd.Series(closeness_centrality).round(3)
-
-    df = df.sort_values(by='Node ID')
-    # Export the DataFrame to a CSV file
-    #df.to_csv('C:/Users/MSI-PC/Desktop/Social Task/output.csv')        
-    return df
-
-
 
