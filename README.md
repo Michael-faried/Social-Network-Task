@@ -4,7 +4,7 @@
 ### 1. Louvain Algorithm
 A modularity-based algorithm for community detection in networks that optimizes the modularity score by iteratively moving nodes between communities to maximize modularity.
 
-##Community Detection Evaluation:
+## Community Detection Evaluation:
 ### 1. Conductance (External)
 A measure of the ratio of the number of edges that connect nodes within the community to the total number of edges incident on nodes in the community, used to evaluate the quality of community detection algorithms.
 ### 2. Modularity (Internal)
@@ -14,11 +14,11 @@ A measure of the similarity between two clustering solutions, used to compare a 
 ### 4. Community Coverage (Internal)
 A measure of the fraction of nodes in the network that are assigned to communities, used to evaluate the quality of community detection algorithms.
 
-##Link Analysis Technique:
+## Link Analysis Technique:
 ### 1. Page Rank
 An algorithm that assigns a score to each node in a network based on the importance of its incoming links, with the assumption that important nodes will receive more incoming links.
 
-##Filtering Nodes:
+## Filtering Nodes:
 ### 1. Degree Centrality
 A measure of the number of edges incident on a node, used to identify highly connected nodes.
 ### 2. Closeness Centrality
