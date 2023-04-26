@@ -17,10 +17,10 @@ class NetworkAnalysisGUI:
         button_frame = tk.Frame(master, width=200,background="#58D68D")
         button_frame.pack(side=tk.LEFT, fill=tk.Y)
         style = ttk.Style()
-        style.configure("Custom.TButton", background="#40E0D0", foreground="black",
+        style.configure("Custom.TButton", background="#1877FF", foreground="black",
                          font=("Arial", 11, "bold"), padding=5, borderwidth=3, relief="raised")
         style2 = ttk.Style()
-        style2.configure("1Custom.TButton", background="#F4D03F", foreground="black",
+        style2.configure("1Custom.TButton", background="#FFFF18", foreground="black",
                          font=("Arial", 13, "bold"), padding=5, borderwidth=3, relief="raised")
         
         text_label = tk.Label(button_frame, text="Apply Louvain Algorithm \n Visualize Graph ", font=("TkDefaultFont", 14,"bold"),background="#58D68D")
@@ -30,7 +30,7 @@ class NetworkAnalysisGUI:
 
         text_label = tk.Label(button_frame, text=" Adjusting Nodes and Edges \n (Based on calculated metrics) ", font=("TkDefaultFont", 13,"bold"),background="#58D68D")
         text_label.pack(pady=(15,0),padx=10)
-        self.visualize_button =  ttk.Button(button_frame, style="1Custom.TButton",text="Adjusting Graph", command=lambda: self.visualize_graph(True),width=25)
+        self.visualize_button =  ttk.Button(button_frame, style="1Custom.TButton",text="Adjusting Graph", command=lambda: self.visualize_graph(True,True),width=25)
         self.visualize_button.pack(pady=5, padx=10, anchor='center')
 
 
@@ -98,12 +98,17 @@ class NetworkAnalysisGUI:
 
         # Create input field to get user input
         text_label = tk.Label(output_frame, text=" Filter Nodes Based on value greater \n than Specific Value ", font=("TkDefaultFont", 13,"bold"),background="#58D68D",foreground="#FF1818")
-        text_label.pack(pady=(15,0),padx=10)
+        text_label.pack(pady=(10,0),padx=10)
         self.user_input = tk.StringVar()
-        self.input_field = tk.Entry(output_frame, textvariable=self.user_input, width=30)
-        self.input_field.pack(pady=(5,0), anchor='center')
+        self.input_field = tk.Entry( output_frame, textvariable=self.user_input, width=17, font=('Arial', 14), bg='#F5F5F5', fg='#333333', bd=2, relief=tk.GROOVE,justify="center")
+        self.input_field.pack(pady=(5, 0), padx=(10, 10), anchor='center')
         # Create button to clear the input field
-        self.clear_button = ttk.Button(output_frame,style="Custom.TButton" ,text="Clear", command=self.clear_input_field)
+
+        style = ttk.Style()
+        style.configure("2Custom.TButton", background="red", foreground="black",
+                         font=("Arial", 11, "bold"), padding=5, borderwidth=3, relief="raised")
+
+        self.clear_button = ttk.Button(output_frame,style="2Custom.TButton" ,text="Clear", command=self.clear_input_field)
         self.clear_button.pack(side=tk.TOP,pady=7)
 
     # Define function to clear the input field
@@ -231,7 +236,7 @@ class NetworkAnalysisGUI:
             self.Text_Panal.insert(tk.END," Node "+ f"{node} = {score:.4f}\n")
 
 
-    def visualize_graph(self,apply_nodeSize=False):
+    def visualize_graph(self,apply_nodeSize=False,apply_edges_weight=False):
         # Create network graph from edge dataframe
         G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target",create_using=nx.MultiGraph())
 
@@ -250,11 +255,15 @@ class NetworkAnalysisGUI:
 
         fig, ax = plt.subplots()
         nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax)
-        
-        if 'Weight' in self.edge_df.columns:
-            edges = nx.draw_networkx_edges(G, pos, ax=ax, width=self.edge_df['Weight']/scalling_factor, edge_color='black')
+        if apply_edges_weight:
+
+            if 'Weight' in self.edge_df.columns:
+                edges = nx.draw_networkx_edges(G, pos, ax=ax, width=self.edge_df['Weight']/scalling_factor, edge_color='black')
+            else:
+                edges = nx.draw_networkx_edges(G, pos, ax=ax, width=0.1, edge_color='gray')
         else:
             edges = nx.draw_networkx_edges(G, pos, ax=ax, width=0.1, edge_color='gray')
+
         
         labels = {node: node for node in G.nodes()}
         nx.draw_networkx_labels(G, pos, labels=labels, font_size=5, ax=ax)
