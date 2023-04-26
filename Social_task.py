@@ -174,7 +174,7 @@ def compute_centralities(G):
     df.to_csv('C:/Users/MSI-PC/Desktop/Social Network Task/output.csv')        
     return df
 
-compute_centralities(G)
+calculate_pagerank(G)
 
 
 

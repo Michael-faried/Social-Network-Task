@@ -18,9 +18,8 @@ class NetworkAnalysisGUI:
         button_frame = tk.Frame(master, width=200,background="#58D68D")
         button_frame.pack(side=tk.LEFT, fill=tk.Y)
         style = ttk.Style()
-        style.configure("Custom.TButton", background="#58D68D", foreground="black",
+        style.configure("Custom.TButton", background="#F4D03F", foreground="black",
                          font=("Arial", 10, "bold"), padding=5, borderwidth=3, relief="raised")
-
 
         text_label = tk.Label(button_frame, text="Apply Louvain Algorithm &Visualize ", font=("TkDefaultFont", 12,"bold"),background="#58D68D")
         text_label.pack(pady=(15,0),padx=10)
@@ -90,7 +89,14 @@ class NetworkAnalysisGUI:
         # Create text widget to display conductance values
         self.Text_Panal = tk.Text(output_frame, height=30, width=35,background="#D5F5E3")
         self.Text_Panal.pack(pady=10, anchor='center')
-        
+
+        # Create input field to get user input
+        text_label = tk.Label(output_frame, text=" Filter Nodes Based on Specific Value ", font=("TkDefaultFont", 12,"bold"),background="#58D68D")
+        text_label.pack(pady=(15,0),padx=10)
+        self.user_input = tk.StringVar()
+        self.input_field = tk.Entry(output_frame, textvariable=self.user_input, width=35)
+        self.input_field.pack(pady=10, anchor='center')
+
 
     def load_edge_file(self):
         # Open file dialog to select edge CSV file
@@ -105,7 +111,6 @@ class NetworkAnalysisGUI:
 
         # Load node CSV file into pandas dataframe
         self.node_df = pd.read_csv(node_filepath)
-
 # 2- Modularity internal evaluation
     def calculate_modularity(self):
         """Calculates the modularity of the detected communities and prints the result."""
@@ -119,8 +124,6 @@ class NetworkAnalysisGUI:
         self.Text_Panal.insert(tk.END, "          Internal evaluation      \n")
         # Display conductance values for each community in the text widget
         self.Text_Panal.insert(tk.END, "  "+f"{community} = {modularity:.4f}\n")
-
-
 
 
 # 4- Calculate NMI External Evaluation
@@ -250,25 +253,37 @@ class NetworkAnalysisGUI:
         df.index.name = 'Node ID'
         df['degree_centrality'] = pd.Series(degree_centrality).round(3)
         df = df.sort_values(by='degree_centrality', ascending=False)
+        user_input = self.user_input.get()
+        if not user_input:
+            user_input = 0
+        else:
+            user_input = float(user_input)
 
-        # Insert degree centrality values in the Text_Panal
-        self.Text_Panal.delete('1.0', tk.END)
-        self.Text_Panal.insert('1.0', df.to_string())
+        # Filter nodes based on degree centrality
+        filtered_nodes = sorted([node for node in G.nodes() if degree_centrality[node] > user_input],
+                    key=lambda node: degree_centrality[node], reverse=True)
+        # Create a new graph with only the filtered nodes
+        filtered_G = G.subgraph(filtered_nodes)
+
+        # Set node color and size for filtered nodes
+        cmap = plt.cm.tab20
+        node_colors = '#C39BD3'
+        node_sizes = [G.degree(node) * 5 for node in filtered_nodes]
 
         # Generate visualization
-        top_nodes = df.head(10)
-        pos = nx.spring_layout(G)
-        cmap = plt.cm.tab20
-        red_nodes = top_nodes.index
-        node_colors = ['red' if node in red_nodes else '#F8C471' for node in G.nodes()]
-        node_sizes = [G.degree(node) * 3 if node in red_nodes else G.degree(node) for node in G.nodes()]
+        pos = nx.spring_layout(filtered_G)
         fig, ax = plt.subplots()
-        nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax)
-        nx.draw_networkx_edges(G, pos, ax=ax)
-        labels = {node: node for node in red_nodes}
-        nx.draw_networkx_labels(G, pos, labels=labels, font_size=7, ax=ax)
-        plt.title('Top 10 Degree Centrality Nodes')
+        nodes = nx.draw_networkx_nodes(filtered_G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax ,)
+        nx.draw_networkx_edges(filtered_G, pos, ax=ax)
+        labels = {node: node for node in filtered_nodes}
+        nx.draw_networkx_labels(filtered_G, pos, labels=labels, font_size=7, ax=ax)
+        plt.title(f'     Degree Centrality Greater {user_input}')
         plt.axis('off')
+
+        # Insert degree centrality values in the Text_Panal
+        filtered_df = df.loc[filtered_nodes]
+        self.Text_Panal.delete('1.0', tk.END)
+        self.Text_Panal.insert('1.0', filtered_df.to_string())
 
         # Embed the plot in the GUI using a canvas
         canvas = FigureCanvasTkAgg(fig, master=self.master)
@@ -287,30 +302,43 @@ class NetworkAnalysisGUI:
         df.index.name = 'Node ID'
         df['betweenness_centrality'] = pd.Series(betweenness_centrality).round(3)
         df = df.sort_values(by='betweenness_centrality', ascending=False)
+        user_input = self.user_input.get()
+        if not user_input:
+            user_input = 0
+        else:
+            user_input = float(user_input)
 
-        # Insert degree centrality values in the Text_Panal
-        self.Text_Panal.delete('1.0', tk.END)
-        self.Text_Panal.insert('1.0', df.to_string())
+        # Filter nodes based on degree centrality
+        filtered_nodes = sorted([node for node in G.nodes() if betweenness_centrality[node] > user_input],
+                    key=lambda node: betweenness_centrality[node], reverse=True)
+        # Create a new graph with only the filtered nodes
+        filtered_G = G.subgraph(filtered_nodes)
+
+        # Set node color and size for filtered nodes
+        cmap = plt.cm.tab20
+        node_colors = '#F7DC6F'
+        node_sizes = [G.degree(node) * 5 for node in filtered_nodes]
 
         # Generate visualization
-        top_nodes = df.head(10)
-        pos = nx.spring_layout(G)
-        cmap = plt.cm.tab20
-        red_nodes = top_nodes.index
-        node_colors = ['red' if node in red_nodes else '#AED6F1' for node in G.nodes()]
-        node_sizes = [G.degree(node) * 3 if node in red_nodes else G.degree(node) for node in G.nodes()]
+        pos = nx.spring_layout(filtered_G)
         fig, ax = plt.subplots()
-        nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax)
-        nx.draw_networkx_edges(G, pos, ax=ax)
-        labels = {node: node for node in red_nodes}
-        nx.draw_networkx_labels(G, pos, labels=labels, font_size=7, ax=ax)
-        plt.title('Top 10 Betweenness Centrality Nodes')
+        nodes = nx.draw_networkx_nodes(filtered_G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax ,)
+        nx.draw_networkx_edges(filtered_G, pos, ax=ax)
+        labels = {node: node for node in filtered_nodes}
+        nx.draw_networkx_labels(filtered_G, pos, labels=labels, font_size=7, ax=ax)
+        plt.title(f'     Betweeness Centrality Greater {user_input}')
         plt.axis('off')
+
+        # Insert degree centrality values in the Text_Panal
+        filtered_df = df.loc[filtered_nodes]
+        self.Text_Panal.delete('1.0', tk.END)
+        self.Text_Panal.insert('1.0', filtered_df.to_string())
 
         # Embed the plot in the GUI using a canvas
         canvas = FigureCanvasTkAgg(fig, master=self.master)
         canvas.draw()
         canvas.get_tk_widget().place(relx=0.5, rely=0.5, anchor=tk.CENTER, width=800, height=600)
+
 
     def filter_eigenvector_centrality(self):
             # Create network graph from edge dataframe
@@ -324,30 +352,43 @@ class NetworkAnalysisGUI:
             df1.index.name = 'Node ID'
             df1['eigenvector_centrality'] = pd.Series(eigenvector_centrality).round(3)
             df1 = df1.sort_values(by='eigenvector_centrality', ascending=False)
-            # Insert degree centrality values in the Text_Panal
-            self.Text_Panal.delete('1.0', tk.END)
-            self.Text_Panal.insert('1.0', df1.to_string())
+            user_input = self.user_input.get()
+            if not user_input:
+                user_input = 0
+            else:
+                user_input = float(user_input)
+
+            # Filter nodes based on degree centrality
+            filtered_nodes = sorted([node for node in G.nodes() if eigenvector_centrality[node] > user_input],
+                        key=lambda node: eigenvector_centrality[node], reverse=True)
+            # Create a new graph with only the filtered nodes
+            filtered_G = G.subgraph(filtered_nodes)
+
+            # Set node color and size for filtered nodes
+            cmap = plt.cm.tab20
+            node_colors = '#85C1E9'
+            node_sizes = [G.degree(node) * 5 for node in filtered_nodes]
 
             # Generate visualization
-            top_nodes = df1.head(10)
-            pos = nx.spring_layout(G)
-            cmap = plt.cm.tab20
-            red_nodes = top_nodes.index
-            node_colors = ['red' if node in red_nodes else '#F7DC6F' for node in G.nodes()]
-            node_sizes = [G.degree(node) * 3 if node in red_nodes else G.degree(node) for node in G.nodes()]
+            pos = nx.spring_layout(filtered_G)
             fig, ax = plt.subplots()
-            nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax)
-            nx.draw_networkx_edges(G, pos, ax=ax)
-            labels = {node: node for node in red_nodes}
-            nx.draw_networkx_labels(G, pos, labels=labels, font_size=7, ax=ax)
-            plt.title('Top 10 eigenvector Centrality Nodes')
+            nodes = nx.draw_networkx_nodes(filtered_G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax ,)
+            nx.draw_networkx_edges(filtered_G, pos, ax=ax)
+            labels = {node: node for node in filtered_nodes}
+            nx.draw_networkx_labels(filtered_G, pos, labels=labels, font_size=7, ax=ax)
+            plt.title(f'     Eigenvector Centrality Greater {user_input}')
             plt.axis('off')
+
+            # Insert degree centrality values in the Text_Panal
+            filtered_df = df1.loc[filtered_nodes]
+            self.Text_Panal.delete('1.0', tk.END)
+            self.Text_Panal.insert('1.0', filtered_df.to_string())
 
             # Embed the plot in the GUI using a canvas
             canvas = FigureCanvasTkAgg(fig, master=self.master)
             canvas.draw()
             canvas.get_tk_widget().place(relx=0.5, rely=0.5, anchor=tk.CENTER, width=800, height=600)
- 
+
     def filter_harmonic_centrality(self):
             # Create network graph from edge dataframe
             G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.MultiGraph())
@@ -360,30 +401,43 @@ class NetworkAnalysisGUI:
             df.index.name = 'Node ID'
             df['harmonic_centrality'] = pd.Series(harmonic_centrality).round(4)
             df = df.sort_values(by='harmonic_centrality', ascending=False)
+            user_input = self.user_input.get()
+            if not user_input:
+                user_input = 0
+            else:
+                user_input = float(user_input)
 
-            # Insert degree centrality values in the Text_Panal
-            self.Text_Panal.delete('1.0', tk.END)
-            self.Text_Panal.insert('1.0', df.to_string())
+            # Filter nodes based on degree centrality
+            filtered_nodes = sorted([node for node in G.nodes() if harmonic_centrality[node] > user_input],
+                        key=lambda node: harmonic_centrality[node], reverse=True)
+            # Create a new graph with only the filtered nodes
+            filtered_G = G.subgraph(filtered_nodes)
+
+            # Set node color and size for filtered nodes
+            cmap = plt.cm.tab20
+            node_colors = '#F1948A'
+            node_sizes = [G.degree(node) * 5 for node in filtered_nodes]
 
             # Generate visualization
-            top_nodes = df.head(10)
-            pos = nx.spring_layout(G)
-            cmap = plt.cm.tab20
-            red_nodes = top_nodes.index
-            node_colors = ['red' if node in red_nodes else '#55F7AB' for node in G.nodes()]
-            node_sizes = [G.degree(node) * 3 if node in red_nodes else G.degree(node) for node in G.nodes()]
+            pos = nx.spring_layout(filtered_G)
             fig, ax = plt.subplots()
-            nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax)
-            nx.draw_networkx_edges(G, pos, ax=ax)
-            labels = {node: node for node in red_nodes}
-            nx.draw_networkx_labels(G, pos, labels=labels, font_size=7, ax=ax)
-            plt.title('Top 10 harmonic Centrality Nodes')
+            nodes = nx.draw_networkx_nodes(filtered_G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax ,)
+            nx.draw_networkx_edges(filtered_G, pos, ax=ax)
+            labels = {node: node for node in filtered_nodes}
+            nx.draw_networkx_labels(filtered_G, pos, labels=labels, font_size=7, ax=ax)
+            plt.title(f'   harmonic Centrality Greater {user_input}')
             plt.axis('off')
+
+            # Insert degree centrality values in the Text_Panal
+            filtered_df = df.loc[filtered_nodes]
+            self.Text_Panal.delete('1.0', tk.END)
+            self.Text_Panal.insert('1.0', filtered_df.to_string())
 
             # Embed the plot in the GUI using a canvas
             canvas = FigureCanvasTkAgg(fig, master=self.master)
             canvas.draw()
             canvas.get_tk_widget().place(relx=0.5, rely=0.5, anchor=tk.CENTER, width=800, height=600)
+
  
     def filter_closeness_centrality(self):
             # Create network graph from edge dataframe
@@ -398,24 +452,37 @@ class NetworkAnalysisGUI:
             df['closeness_centrality'] = pd.Series(closeness_centrality).round(3)
             df = df.sort_values(by='closeness_centrality', ascending=False)
 
-            # Insert degree centrality values in the Text_Panal
-            self.Text_Panal.delete('1.0', tk.END)
-            self.Text_Panal.insert('1.0', df.to_string())
+            user_input = self.user_input.get()
+            if not user_input:
+                user_input = 0
+            else:
+                user_input = float(user_input)
+
+            # Filter nodes based on degree centrality
+            filtered_nodes = sorted([node for node in G.nodes() if closeness_centrality[node] > user_input],
+                        key=lambda node: closeness_centrality[node], reverse=True)
+            # Create a new graph with only the filtered nodes
+            filtered_G = G.subgraph(filtered_nodes)
+
+            # Set node color and size for filtered nodes
+            cmap = plt.cm.tab20
+            node_colors = '#58D68D'
+            node_sizes = [G.degree(node) * 5 for node in filtered_nodes]
 
             # Generate visualization
-            top_nodes = df.head(10)
-            pos = nx.spring_layout(G)
-            cmap = plt.cm.tab20
-            red_nodes = top_nodes.index
-            node_colors = ['red' if node in red_nodes else 'yellow' for node in G.nodes()]
-            node_sizes = [G.degree(node) * 3 if node in red_nodes else G.degree(node) for node in G.nodes()]
+            pos = nx.spring_layout(filtered_G)
             fig, ax = plt.subplots()
-            nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax)
-            nx.draw_networkx_edges(G, pos, ax=ax)
-            labels = {node: node for node in red_nodes}
-            nx.draw_networkx_labels(G, pos, labels=labels, font_size=7, ax=ax)
-            plt.title('Top 10 closeness Centrality Nodes')
+            nodes = nx.draw_networkx_nodes(filtered_G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax ,)
+            nx.draw_networkx_edges(filtered_G, pos, ax=ax)
+            labels = {node: node for node in filtered_nodes}
+            nx.draw_networkx_labels(filtered_G, pos, labels=labels, font_size=7, ax=ax)
+            plt.title(f'       Closeness Centrality Greater {user_input}')
             plt.axis('off')
+
+            # Insert degree centrality values in the Text_Panal
+            filtered_df = df.loc[filtered_nodes]
+            self.Text_Panal.delete('1.0', tk.END)
+            self.Text_Panal.insert('1.0', filtered_df.to_string())
 
             # Embed the plot in the GUI using a canvas
             canvas = FigureCanvasTkAgg(fig, master=self.master)
@@ -423,11 +490,11 @@ class NetworkAnalysisGUI:
             canvas.get_tk_widget().place(relx=0.5, rely=0.5, anchor=tk.CENTER, width=800, height=600)
 
 
+
 root = tk.Tk()
 root.geometry("1000x600")
 gui = NetworkAnalysisGUI(root)
 root.configure(bg="#D5F5E3")
-
 root.mainloop()
 
 
