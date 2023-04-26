@@ -217,7 +217,7 @@ class NetworkAnalysisGUI:
         for node, score in sorted(pagerank.items(), key=lambda x: x[1], reverse=True):
             self.Text_Panal.insert(tk.END," Node "+ f"{node} = {score:.4f}\n")
 
-    def visualize_graph(self):
+    def visualize_graph(self,apply_nodeSize = False):
         # Create network graph from edge dataframe
         G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target",create_using=nx.MultiGraph())
 
@@ -228,9 +228,13 @@ class NetworkAnalysisGUI:
         pos = nx.spring_layout(G)
         cmap = plt.cm.tab20
         node_colors = [partition[node] for node in G.nodes()]
-        node_sizes = [G.degree(node)/2 for node in G.nodes()]
+
+        node_sizes = 220                #defult value of node sizes
+        if(apply_nodeSize == True):     #if the user wants to apply the node sizes
+            node_sizes = [G.degree(node)/2 for node in G.nodes()]
+
         fig, ax = plt.subplots()
-        nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax)
+        nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors,node_size=node_sizes, cmap=cmap, ax=ax)
         nx.draw_networkx_edges(G, pos, ax=ax, width= 0.1)
         labels = {node: node for node in G.nodes()}
         nx.draw_networkx_labels(G, pos, labels=labels, font_size=5, ax=ax)
