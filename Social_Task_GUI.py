@@ -25,7 +25,7 @@ class NetworkAnalysisGUI:
         text_label.pack(pady=(15,0),padx=10)
 
         # Create button for applying Louvain algorithm and visualizing the network graph
-        self.visualize_button =  ttk.Button(button_frame, style="Custom.TButton",text=" Louvain Algorithm", command=self.visualize_graph)
+        self.visualize_button =  ttk.Button(button_frame, style="Custom.TButton",text=" Louvain Algorithm", command=lambda:self.visualize_graph())
         self.visualize_button.pack(pady=5, padx=10, anchor='center')
 
         text_label = tk.Label(button_frame, text=" Community detection evaluations ", font=("TkDefaultFont", 12,"bold"),background="#58D68D")
