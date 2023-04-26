@@ -224,6 +224,7 @@ class NetworkAnalysisGUI:
     def calculate_pagerank(self):
         """Calculates the PageRank score for each node in the graph and prints the result."""
         G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target",create_using=nx.MultiGraph())
+        G = nx.Graph(G)
         pagerank = nx.pagerank(G)
         self.Text_Panal.delete('1.0', tk.END)
         self.Text_Panal.insert(tk.END," Page Rank Nodes Values : \n \n")
@@ -231,7 +232,7 @@ class NetworkAnalysisGUI:
             self.Text_Panal.insert(tk.END," Node "+ f"{node} = {score:.4f}\n")
 
 
-    def visualize_graph(self,apply_nodeSize=False):
+    def visualize_graph(self,apply_nodeSize = False):
         # Create network graph from edge dataframe
         G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target",create_using=nx.MultiGraph())
 
@@ -256,6 +257,13 @@ class NetworkAnalysisGUI:
         else:
             edges = nx.draw_networkx_edges(G, pos, ax=ax, width=0.1, edge_color='gray')
         
+        node_sizes = 220                #defult value of node sizes
+        if(apply_nodeSize == True):     #if the user wants to apply the node sizes
+            node_sizes = [G.degree(node)/2 for node in G.nodes()]
+
+        fig, ax = plt.subplots()
+        nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors,node_size=node_sizes, cmap=cmap, ax=ax)
+        nx.draw_networkx_edges(G, pos, ax=ax, width= 0.1)
         labels = {node: node for node in G.nodes()}
         nx.draw_networkx_labels(G, pos, labels=labels, font_size=5, ax=ax)
         plt.title('Louvain algorithm')
