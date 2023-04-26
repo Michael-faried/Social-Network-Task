@@ -69,7 +69,6 @@ class NetworkAnalysisGUI:
         self.filter_closeness_centrality_btn.pack(pady=3, padx=10, anchor='center')
 
 
-
         text_label = tk.Label(button_frame, text=" link analysis technique ", font=("TkDefaultFont", 13,"bold"),background="#58D68D")
         text_label.pack(pady=(15,0))
         self.PageRank_Button = ttk.Button(button_frame,style="Custom.TButton", text=" Nodes Page Rank ", command=self.calculate_pagerank)
@@ -524,9 +523,10 @@ class NetworkAnalysisGUI:
 
 
 root = tk.Tk()
-root.geometry("1000x600")
+root.geometry("1200x800")
 gui = NetworkAnalysisGUI(root)
 root.configure(bg="#D5F5E3")
+root.wm_state("zoomed")
 root.mainloop()
 
 
