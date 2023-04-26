@@ -8,7 +8,6 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import ttk
 
-
 class NetworkAnalysisGUI:
     def __init__(self, master):
         self.master = master
@@ -18,53 +17,60 @@ class NetworkAnalysisGUI:
         button_frame = tk.Frame(master, width=200,background="#58D68D")
         button_frame.pack(side=tk.LEFT, fill=tk.Y)
         style = ttk.Style()
-        style.configure("Custom.TButton", background="#F4D03F", foreground="black",
-                         font=("Arial", 10, "bold"), padding=5, borderwidth=3, relief="raised")
-
-        text_label = tk.Label(button_frame, text="Apply Louvain Algorithm &Visualize ", font=("TkDefaultFont", 12,"bold"),background="#58D68D")
+        style.configure("Custom.TButton", background="#40E0D0", foreground="black",
+                         font=("Arial", 11, "bold"), padding=5, borderwidth=3, relief="raised")
+        style2 = ttk.Style()
+        style2.configure("1Custom.TButton", background="#F4D03F", foreground="black",
+                         font=("Arial", 13, "bold"), padding=5, borderwidth=3, relief="raised")
+        
+        text_label = tk.Label(button_frame, text="Apply Louvain Algorithm \n Visualize Graph ", font=("TkDefaultFont", 14,"bold"),background="#58D68D")
         text_label.pack(pady=(15,0),padx=10)
-
-        # Create button for applying Louvain algorithm and visualizing the network graph
-        self.visualize_button =  ttk.Button(button_frame, style="Custom.TButton",text=" Louvain Algorithm", command=self.visualize_graph)
+        self.visualize_button =  ttk.Button(button_frame, style="1Custom.TButton",text=" Louvain Algorithm", command= lambda:self.visualize_graph(),width=25)
         self.visualize_button.pack(pady=5, padx=10, anchor='center')
 
-        text_label = tk.Label(button_frame, text=" Community detection evaluations ", font=("TkDefaultFont", 12,"bold"),background="#58D68D")
+        text_label = tk.Label(button_frame, text=" Adjusting Nodes and Edges \n (Based on calculated metrics) ", font=("TkDefaultFont", 13,"bold"),background="#58D68D")
         text_label.pack(pady=(15,0),padx=10)
+        self.visualize_button =  ttk.Button(button_frame, style="1Custom.TButton",text="Adjusting Graph", command=lambda: self.visualize_graph(True),width=25)
+        self.visualize_button.pack(pady=5, padx=10, anchor='center')
+
+
+        text_label = tk.Label(button_frame, text=" Community detection evaluations ", font=("TkDefaultFont", 13,"bold"),background="#58D68D")
+        text_label.pack(pady=(10,5),padx=10)
         # Create button for calculating and displaying conductance values
-        self.conductance_button = ttk.Button(button_frame,style="Custom.TButton", text=" Conductance Values", command=self.calculate_and_display_conductance)
-        self.conductance_button.pack(pady=10, anchor='center')
+        self.conductance_button = ttk.Button(button_frame,style="Custom.TButton", text=" Conductance Values", command=self.calculate_and_display_conductance,width=20)
+        self.conductance_button.pack(pady=3, anchor='center')
 
         self.Modularity_Button = ttk.Button(button_frame,style="Custom.TButton", text=" Modularity", command=self.calculate_modularity,width=20)
-        self.Modularity_Button.pack(pady=5, anchor='center')
+        self.Modularity_Button.pack(pady=3, anchor='center')
 
         self.NMI_Button = ttk.Button(button_frame,style="Custom.TButton", text=" NMI VALUE", command=self.calculate_nmi,width=20)
-        self.NMI_Button.pack(pady=5, anchor='center')
+        self.NMI_Button.pack(pady=3, anchor='center')
 
         self.CC_Button = ttk.Button(button_frame,style="Custom.TButton", text=" Community Coverage", command=self.calculate_community_coverage,width=20)
-        self.CC_Button.pack(pady=5, anchor='center')
+        self.CC_Button.pack(pady=3, anchor='center')
 
 
         # # Create a label for the text
-        text_label = tk.Label(button_frame, text="Filter Nodes Based on Centrality", font=("TkDefaultFont", 12,"bold"),background="#58D68D")
-        text_label.pack(pady=(15,0),padx=10)
-        self.filter_degree_centrality_btn = ttk.Button(button_frame,style="Custom.TButton", text=" degree centrality", command=self.filter_degree_centrality)
-        self.filter_degree_centrality_btn.pack(pady=5, padx=10, anchor='center')
+        text_label = tk.Label(button_frame, text="Filter Nodes Based on Centrality", font=("TkDefaultFont", 13,"bold"),background="#58D68D")
+        text_label.pack(pady=(12,0),padx=10)
+        self.filter_degree_centrality_btn = ttk.Button(button_frame,style="Custom.TButton", text=" degree centrality", command=self.filter_degree_centrality ,width=22)
+        self.filter_degree_centrality_btn.pack(pady=3, padx=10, anchor='center')
 
-        self.filter_Betweeness_centrality_btn = ttk.Button(button_frame,style="Custom.TButton", text="  Betweeness centrality", command=self.filter_betweenness_centrality)
-        self.filter_Betweeness_centrality_btn.pack(pady=5, padx=10, anchor='center')
+        self.filter_Betweeness_centrality_btn = ttk.Button(button_frame,style="Custom.TButton", text="  Betweeness centrality", command=self.filter_betweenness_centrality,width=22)
+        self.filter_Betweeness_centrality_btn.pack(pady=3, padx=10, anchor='center')
 
-        self.filter_eigenvector_centrality_btn = ttk.Button(button_frame,style="Custom.TButton", text="  Eigenvector centrality", command=self.filter_eigenvector_centrality)
-        self.filter_eigenvector_centrality_btn.pack(pady=5, padx=10, anchor='center')
+        self.filter_eigenvector_centrality_btn = ttk.Button(button_frame,style="Custom.TButton", text="  Eigenvector centrality", command=self.filter_eigenvector_centrality,width=22)
+        self.filter_eigenvector_centrality_btn.pack(pady=3, padx=10, anchor='center')
 
-        self.filter_harmonic_centrality_btn = ttk.Button(button_frame,style="Custom.TButton", text="  Harmonic centrality", command=self.filter_harmonic_centrality)
-        self.filter_harmonic_centrality_btn.pack(pady=5, padx=10, anchor='center')
+        self.filter_harmonic_centrality_btn = ttk.Button(button_frame,style="Custom.TButton", text="  Harmonic centrality", command=self.filter_harmonic_centrality,width=22)
+        self.filter_harmonic_centrality_btn.pack(pady=3, padx=10, anchor='center')
 
-        self.filter_closeness_centrality_btn = ttk.Button(button_frame,style="Custom.TButton", text="  Closeness centrality", command=self.filter_closeness_centrality)
-        self.filter_closeness_centrality_btn.pack(pady=5, padx=10, anchor='center')
+        self.filter_closeness_centrality_btn = ttk.Button(button_frame,style="Custom.TButton", text="  Closeness centrality", command=self.filter_closeness_centrality,width=22)
+        self.filter_closeness_centrality_btn.pack(pady=3, padx=10, anchor='center')
 
 
 
-        text_label = tk.Label(button_frame, text=" link analysis technique ", font=("TkDefaultFont", 12,"bold"),background="#58D68D")
+        text_label = tk.Label(button_frame, text=" link analysis technique ", font=("TkDefaultFont", 13,"bold"),background="#58D68D")
         text_label.pack(pady=(15,0))
         self.PageRank_Button = ttk.Button(button_frame,style="Custom.TButton", text=" Nodes Page Rank ", command=self.calculate_pagerank)
         self.PageRank_Button.pack(pady=5, anchor='center')
@@ -77,13 +83,13 @@ class NetworkAnalysisGUI:
         # Create frame for edge and node buttons at top of output text panel
         button_frame_top = tk.Frame(output_frame,background="#58D68D")
         button_frame_top.pack(side=tk.TOP, pady=10)
-        text_label = tk.Label(button_frame_top, text=" Load CSV Data ", font=("TkDefaultFont", 12,"bold"),background="#58D68D")
+        text_label = tk.Label(button_frame_top, text=" Load CSV Data ", font=("TkDefaultFont", 14,"bold"),background="#58D68D")
         text_label.pack(pady=(10,0),padx=10)
         # Add edge and node buttons to top frame
-        self.edge_button_top = ttk.Button(button_frame_top,style="Custom.TButton", text="Load Edge CSV", command=self.load_edge_file)
+        self.edge_button_top = ttk.Button(button_frame_top,style="1Custom.TButton", text="Load Edge CSV", command=self.load_edge_file)
         self.edge_button_top.pack(side=tk.LEFT, padx=5,pady=(20,10))
 
-        self.node_button_top = ttk.Button(button_frame_top,style="Custom.TButton", text="Load Node CSV", command=self.load_node_file)
+        self.node_button_top = ttk.Button(button_frame_top,style="1Custom.TButton", text="Load Node CSV", command=self.load_node_file)
         self.node_button_top.pack(side=tk.LEFT, padx=5,pady=(20,10))
 
         # Create text widget to display conductance values
@@ -91,11 +97,19 @@ class NetworkAnalysisGUI:
         self.Text_Panal.pack(pady=10, anchor='center')
 
         # Create input field to get user input
-        text_label = tk.Label(output_frame, text=" Filter Nodes Based on Specific Value ", font=("TkDefaultFont", 12,"bold"),background="#58D68D")
+        text_label = tk.Label(output_frame, text=" Filter Nodes Based on value greater \n than Specific Value ", font=("TkDefaultFont", 13,"bold"),background="#58D68D",foreground="#FF1818")
         text_label.pack(pady=(15,0),padx=10)
         self.user_input = tk.StringVar()
-        self.input_field = tk.Entry(output_frame, textvariable=self.user_input, width=35)
-        self.input_field.pack(pady=10, anchor='center')
+        self.input_field = tk.Entry(output_frame, textvariable=self.user_input, width=30)
+        self.input_field.pack(pady=(5,0), anchor='center')
+        # Create button to clear the input field
+        self.clear_button = ttk.Button(output_frame,style="Custom.TButton" ,text="Clear", command=self.clear_input_field)
+        self.clear_button.pack(side=tk.TOP,pady=7)
+
+    # Define function to clear the input field
+    def clear_input_field(self):
+        self.input_field.delete(0, tk.END)
+
 
 
     def load_edge_file(self):
@@ -217,21 +231,31 @@ class NetworkAnalysisGUI:
             self.Text_Panal.insert(tk.END," Node "+ f"{node} = {score:.4f}\n")
 
 
-    def visualize_graph(self):
+    def visualize_graph(self,apply_nodeSize=False):
         # Create network graph from edge dataframe
         G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target",create_using=nx.MultiGraph())
 
         # Partition nodes into communities using Louvain algorithm
         partition = best_partition(G)
 
+        scalling_factor=10000
         # Draw network graph with nodes colored by community
         pos = nx.spring_layout(G)
         cmap = plt.cm.tab20
         node_colors = [partition[node] for node in G.nodes()]
-        node_sizes = [G.degree(node)/2 for node in G.nodes()]
+
+        node_sizes = 220                # default value of node sizes
+        if apply_nodeSize:              # if the user wants to apply the node sizes
+            node_sizes = [G.degree(node) / 2 for node in G.nodes()]
+
         fig, ax = plt.subplots()
         nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax)
-        nx.draw_networkx_edges(G, pos, ax=ax)
+        
+        if 'Weight' in self.edge_df.columns:
+            edges = nx.draw_networkx_edges(G, pos, ax=ax, width=self.edge_df['Weight']/scalling_factor, edge_color='black')
+        else:
+            edges = nx.draw_networkx_edges(G, pos, ax=ax, width=0.1, edge_color='gray')
+        
         labels = {node: node for node in G.nodes()}
         nx.draw_networkx_labels(G, pos, labels=labels, font_size=5, ax=ax)
         plt.title('Louvain algorithm')
