@@ -100,7 +100,7 @@ class NetworkAnalysisGUI:
         text_label = tk.Label(output_frame, text=" Filter Nodes Based on value greater \n than Specific Value ", font=("TkDefaultFont", 13,"bold"),background="#58D68D",foreground="#FF1818")
         text_label.pack(pady=(10,0),padx=10)
         self.user_input = tk.StringVar()
-        self.input_field = tk.Entry( output_frame, textvariable=self.user_input, width=17, font=('Arial', 14), bg='#F5F5F5', fg='#333333', bd=2, relief=tk.GROOVE,justify="center")
+        self.input_field = tk.Entry( output_frame, textvariable=self.user_input, width=20, font=('Arial', 14), bg='#F5F5F5', fg='#333333', bd=2, relief=tk.GROOVE,justify="center")
         self.input_field.pack(pady=(5, 0), padx=(10, 10), anchor='center')
         # Create button to clear the input field
 
@@ -242,29 +242,28 @@ class NetworkAnalysisGUI:
 
         # Partition nodes into communities using Louvain algorithm
         partition = best_partition(G)
+        edge_weights = self.edge_df.groupby(["Source", "Target"]).size().to_dict()
 
-        scalling_factor=5000
+        scalling_factor=220
         # Draw network graph with nodes colored by community
         pos = nx.spring_layout(G)
         cmap = plt.cm.tab20
         node_colors = [partition[node] for node in G.nodes()]
 
-        node_sizes = 220                # default value of node sizes
+        node_sizes = 220               # default value of node sizes
         if apply_nodeSize:              # if the user wants to apply the node sizes
             node_sizes = [G.degree(node) / 2 for node in G.nodes()]
 
         fig, ax = plt.subplots()
         nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax)
         if apply_edges_weight:
-
             if 'Weight' in self.edge_df.columns:
-                edges = nx.draw_networkx_edges(G, pos, ax=ax, width=self.edge_df['Weight']/scalling_factor, edge_color='black')
+                edges = nx.draw_networkx_edges(G, pos, ax=ax, width=self.edge_df['Weight']/5000, edge_color='black')
             else:
-                edges = nx.draw_networkx_edges(G, pos, ax=ax, width=0.1, edge_color='gray')
-        else:
+                edges = nx.draw_networkx_edges(G, pos, ax=ax, width=[edge_weights.get((u, v),0.1)/scalling_factor for u, v in G.edges()], edge_color='black')
+        else: #for louvian Button
             edges = nx.draw_networkx_edges(G, pos, ax=ax, width=0.1, edge_color='gray')
 
-        
         labels = {node: node for node in G.nodes()}
         nx.draw_networkx_labels(G, pos, labels=labels, font_size=5, ax=ax)
         plt.title('Louvain algorithm')
