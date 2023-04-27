@@ -86,10 +86,30 @@ class NetworkAnalysisGUI:
         text_label.pack(pady=(10,0),padx=10)
         # Add edge and node buttons to top frame
         self.edge_button_top = ttk.Button(button_frame_top,style="1Custom.TButton", text="Load Edge CSV", command=self.load_edge_file)
-        self.edge_button_top.pack(side=tk.LEFT, padx=5,pady=(20,10))
+        self.edge_button_top.pack(side=tk.LEFT, padx=5,pady=(10,2))
 
         self.node_button_top = ttk.Button(button_frame_top,style="1Custom.TButton", text="Load Node CSV", command=self.load_node_file)
-        self.node_button_top.pack(side=tk.LEFT, padx=5,pady=(20,10))
+        self.node_button_top.pack(side=tk.LEFT, padx=5,pady=(10,2))
+
+
+        options = ['Direct Graph', 'Indirect Graph']
+
+        # create a StringVar to hold the selected option
+        selected_option = tk.StringVar()
+        selected_option.set('Select Graph Type') # set the default placeholder text
+
+        def on_click(event):
+            # remove the placeholder text when the user clicks on the combo box
+            if selected_option.get() == 'Select Graph Type':
+                selected_option.set('')
+                
+        # create the ComboBox
+        combo_box = ttk.Combobox(output_frame, textvariable=selected_option, values=options, state='readonly')
+        combo_box.pack(pady=(0,0))
+
+        # add event binding to remove the placeholder text when the user clicks on the combo box
+        combo_box.bind('<FocusIn>', on_click)
+
 
         # Create text widget to display conductance values
         self.Text_Panal = tk.Text(output_frame, height=30, width=35,background="#D5F5E3")
@@ -97,7 +117,7 @@ class NetworkAnalysisGUI:
 
         # Create input field to get user input
         text_label = tk.Label(output_frame, text=" Filter Nodes Based on value greater \n than Specific Value ", font=("TkDefaultFont", 13,"bold"),background="#58D68D",foreground="#FF1818")
-        text_label.pack(pady=(10,0),padx=10)
+        text_label.pack(pady=(0,0),padx=10)
         self.user_input = tk.StringVar()
         self.input_field = tk.Entry( output_frame, textvariable=self.user_input, width=20, font=('Arial', 14), bg='#F5F5F5', fg='#333333', bd=2, relief=tk.GROOVE,justify="center")
         self.input_field.pack(pady=(5, 0), padx=(10, 10), anchor='center')
@@ -237,9 +257,7 @@ class NetworkAnalysisGUI:
 
     def visualize_graph(self,apply_nodeSize=False,apply_edges_weight=False):
         # Create network graph from edge dataframe
-        G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target",create_using=nx.MultiGraph())
-
-        # Partition nodes into communities using Louvain algorithm
+        G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target",create_using=nx.Graph())
         partition = best_partition(G)
         edge_weights = self.edge_df.groupby(["Source", "Target"]).size().to_dict()
 
@@ -249,9 +267,9 @@ class NetworkAnalysisGUI:
         cmap = plt.cm.tab20
         node_colors = [partition[node] for node in G.nodes()]
 
-        node_sizes = 220               # default value of node sizes
+        node_sizes = 100               # default value of node sizes
         if apply_nodeSize:              # if the user wants to apply the node sizes
-            node_sizes = [G.degree(node) / 2 for node in G.nodes()]
+            node_sizes = [G.degree(node)*5 for node in G.nodes()]
 
         fig, ax = plt.subplots()
         nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax)
