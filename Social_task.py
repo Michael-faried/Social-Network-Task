@@ -5,7 +5,7 @@ from sklearn.metrics.cluster import normalized_mutual_info_score
 import matplotlib.pyplot as plt
 
 # Load graph from CSV file
-edge_filepath = pd.read_csv("primaryschool_Edges.csv")
+edge_filepath = pd.read_csv("primaryschool_Edges .csv")
 node_filepath = pd.read_csv("metadata_primaryschool_Nodes.csv")
 #print(edge_filepath)
 G = nx.from_pandas_edgelist(edge_filepath,source="Source",target="Target",create_using=nx.MultiGraph())
@@ -83,6 +83,7 @@ def calculate_modularity(G):
     #print(modularity)
     print(f"The modularity of the detected communities is : {modularity:.3f}")
 
+
 # 3- Calculate coverage of each community
 def calculate_community_coverage(G):
     """Calculates the coverage of each community and prints the result."""
@@ -93,6 +94,7 @@ def calculate_community_coverage(G):
         total_edges = sum([G.degree(node) for node in community_nodes])
         coverage = internal_edges / total_edges
         print(f"The coverage of community {community_id} is {coverage:.3f}")
+calculate_community_coverage(G)
 
 # 4- Calculate NMI External Evaluation
 def calculate_nmi(G, ground_truth_file):
@@ -174,15 +176,20 @@ def compute_centralities(G):
     df.to_csv('C:/Users/MSI-PC/Desktop/Social Network Task/output.csv')        
     return df
 
-calculate_pagerank(G)
 
 
 
 
 
 
+# define the coverage values of the communities
+community_coverages = [0.437, 0.424, 0.424, 0.359, 0.449, 0.433]
 
+# calculate the average coverage of the communities
+average_coverage = sum(community_coverages) / len(community_coverages)
 
+# print the average coverage
+print("The average coverage of the communities is {:.3f}".format(average_coverage))
 
 # x= compute_centralities(G)
 # print(x)
