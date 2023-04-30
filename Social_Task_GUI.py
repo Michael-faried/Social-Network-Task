@@ -7,20 +7,23 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import ttk
+from matplotlib.figure import Figure
 
 class NetworkAnalysisGUI:
     def __init__(self, master):
         self.master = master
         master.title("Network Analysis GUI")
 
-        selected_option = None
-
+        selected_option=None
         # Create frame for buttons on the left
         button_frame = tk.Frame(master, width=200,background="#58D68D")
         button_frame.pack(side=tk.LEFT, fill=tk.Y)
+        
         style = ttk.Style()
         style.configure("Custom.TButton", background="#1877FF", foreground="black",
-                         font=("Arial", 11, "bold"), padding=5, borderwidth=3, relief="raised")
+                         font=("Arial", 11, "bold"), padding=5, borderwidth=3, relief="raised",focuscolor='red')
+        style.configure('Custom.TButton', borderradius=50)
+
         style2 = ttk.Style()
         style2.configure("1Custom.TButton", background="#FFFF18", foreground="black",
                          font=("Arial", 13, "bold"), padding=5, borderwidth=3, relief="raised")
@@ -62,6 +65,10 @@ class NetworkAnalysisGUI:
             button_frame, style="Custom.TButton", text=" degree centrality", command=lambda: self.filter_degree_centrality(selected_option), width=22)
         self.filter_degree_centrality_btn.pack(pady=3, padx=10, anchor='center')
 
+        self.filter_closeness_centrality_btn = ttk.Button(
+            button_frame, style="Custom.TButton", text="  Closeness centrality", command=lambda: self.filter_closeness_centrality(selected_option), width=22)
+        self.filter_closeness_centrality_btn.pack(pady=3, padx=10, anchor='center')
+
         self.filter_Betweeness_centrality_btn = ttk.Button(
             button_frame, style="Custom.TButton", text="  Betweeness centrality", command=lambda: self.filter_betweenness_centrality(selected_option), width=22)
         self.filter_Betweeness_centrality_btn.pack(pady=3, padx=10, anchor='center')
@@ -74,9 +81,6 @@ class NetworkAnalysisGUI:
             button_frame, style="Custom.TButton", text="  Harmonic centrality", command=lambda: self.filter_harmonic_centrality(selected_option), width=22)
         self.filter_harmonic_centrality_btn.pack(pady=3, padx=10, anchor='center')
 
-        self.filter_closeness_centrality_btn = ttk.Button(
-            button_frame, style="Custom.TButton", text="  Closeness centrality", command=lambda: self.filter_closeness_centrality(selected_option), width=22)
-        self.filter_closeness_centrality_btn.pack(pady=3, padx=10, anchor='center')
 
 
         text_label = tk.Label(button_frame, text=" link analysis technique ", font=("TkDefaultFont", 13,"bold"),background="#58D68D")
@@ -102,7 +106,7 @@ class NetworkAnalysisGUI:
         self.node_button_top = ttk.Button(button_frame_top,style="1Custom.TButton", text="Load Node CSV", command=self.load_node_file)
         self.node_button_top.pack(side=tk.LEFT, padx=5,pady=(10,2))
 
-        options = ['Direct Graph', 'Indirect Graph']
+        options = ['Direct Graph', 'Undirect Graph']
 
         # create a StringVar to hold the selected option
         selected_option = tk.StringVar()
@@ -159,14 +163,78 @@ class NetworkAnalysisGUI:
 
         # Load node CSV file into pandas dataframe
         self.node_df = pd.read_csv(node_filepath)
-# 2- Modularity internal evaluation
 
+
+
+    def visualize_graph(self, apply_nodeSize=False, apply_edges_weight=False, selected_option=""):
+        # Create network graph from edge dataframe
+        if (selected_option == 'Direct Graph'):
+            G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.DiGraph())
+            print("Diiiiiiiiirect")
+        else:
+            G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.Graph())
+            print("Undireeeect")
+
+
+        partition = best_partition(G.to_undirected())
+        edge_weights = self.edge_df.groupby(["Source", "Target"]).size().to_dict()
+
+        # Draw network graph with nodes colored by community
+        pos = nx.spring_layout(G)
+        cmap = plt.cm.tab20
+        node_colors = [partition[node] for node in G.nodes()]
+
+        node_sizes = 250  # default value of node sizes
+        if apply_nodeSize:  # if the user wants to apply the node sizes
+            if len(G.nodes()) <= 50:
+                node_sizes = [G.degree(node) * 100 for node in G.nodes()]
+            else:
+                node_sizes = [G.degree(node) / 2 for node in G.nodes()]
+
+        fig, ax = plt.subplots()
+        nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax)
+
+        if len(G.edges()) <= 100:
+            w = 1
+            scalling_factor = 1
+        else:
+            w = 0.1
+            scalling_factor = 500
+
+
+        if apply_edges_weight:
+            if 'Weight' in self.edge_df.columns:
+                edges = nx.draw_networkx_edges(G, pos, ax=ax, width=self.edge_df['Weight'] / 5000, edge_color='black')
+            else:
+                edges = nx.draw_networkx_edges(G, pos, ax=ax, width=[edge_weights.get((u, v), w) / scalling_factor for u, v in G.edges()], edge_color='black')
+        else:  # for louvian Button
+            edges = nx.draw_networkx_edges(G, pos, ax=ax, width=0.1, edge_color='gray')
+
+
+        labels = {node: node for node in G.nodes()}
+        nx.draw_networkx_labels(G, pos, labels=labels, font_size=6, ax=ax)
+
+        if selected_option == 'Direct Graph':
+            nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_weights, label_pos=0.3, font_size=6, ax=ax)
+
+        plt.title('Louvain algorithm')
+        plt.colorbar(mappable=plt.cm.ScalarMappable(cmap=cmap), label="Community")
+        plt.axis('off')
+
+        # Embed the plot in the GUI using a canvas
+        canvas = FigureCanvasTkAgg(fig, master=self.master)
+        canvas.draw()
+        canvas.get_tk_widget().place(relx=0.497, rely=0.5, anchor=tk.CENTER, width=870, height=700)
+
+
+
+# 2- Modularity internal evaluation
     def calculate_modularity(self, selected_option):
         """Calculates the modularity of the detected communities and prints the result."""
         if (selected_option == 'Direct Graph'):
             G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target",create_using=nx.DiGraph())
         else:
-            G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target",create_using=nx.Graph())
+            G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target",create_using=nx.DiGraph())
 
         communities=list(nx.algorithms.community.greedy_modularity_communities(G))
         modularity=nx.algorithms.community.modularity(G,communities)
@@ -176,7 +244,7 @@ class NetworkAnalysisGUI:
         community ="Modularity "
         self.Text_Panal.insert(tk.END, "          Internal evaluation      \n")
         # Display conductance values for each community in the text widget
-        self.Text_Panal.insert(tk.END, "  "+f"{community} = {modularity:.4f}\n")
+        self.Text_Panal.insert(tk.END, "  "+f"{community} = {modularity:.5f}\n")
 
 
 # 4- Calculate NMI External Evaluation
@@ -190,9 +258,18 @@ class NetworkAnalysisGUI:
         else:
             G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target",create_using=nx.Graph())
         partition = best_partition(G)
+
         ground_truth_dict = dict(zip(ground_truth_file['ID'], ground_truth_file['Class']))
         # Calculate NMI between detected communities and ground truth communities
-        nmi = normalized_mutual_info_score(list(ground_truth_dict.values()), list(partition.values()))
+        #print(list(set(partition.values())))
+
+        # Convert ground truth values format to lists of integers
+        unique_labels = list(set(ground_truth_dict.values()))
+        labels_map = {label: i for i, label in enumerate(unique_labels)}
+        ground_truth_communites = [labels_map[ground_truth_dict[node]] for node in G.nodes()]
+        #print(list(set(ground_truth_communites)))
+
+        nmi = normalized_mutual_info_score(ground_truth_communites, list(partition.values()))
         # Delete existing text in the text widget
         self.Text_Panal.delete('1.0', tk.END)
         community ="NMI VALUE "
@@ -233,16 +310,20 @@ class NetworkAnalysisGUI:
                 for neighbor in neighbors:
                     if neighbor not in community:
                         if G.has_edge(node, neighbor):
-                            Eoc += G[node][neighbor]['weight'] if G.is_directed() else 1 
-                            # it adds the weight of the edge (or 1 if the graph is unweighted) to Eoc.
+                            if G[node][neighbor].get('weight') is not None:
+                                Eoc += G[node][neighbor]['weight']
+                            else:
+                                Eoc += 1
                     else:
-                        Ec += G[node][neighbor]['weight'] if G.is_directed() else 1
-                        # it adds the weight of the edge (or 1 if the graph is unweighted) to Ec.
+                        if G.has_edge(node, neighbor):
+                            if G[node][neighbor].get('weight') is not None:
+                                Ec += G[node][neighbor]['weight']
+                            else:
+                                Ec += 1
             if Ec == 0:
                 return 1
             else:
                 return 2 * Eoc / (2 * Ec + Eoc)
-
         communities = {c: [] for c in set(partition.values())}
         for node, community in partition.items():
             communities[community].append(node)
@@ -257,9 +338,9 @@ class NetworkAnalysisGUI:
                 self.edge_df, source="Source", target="Target", create_using=nx.DiGraph())
         else:
             G = nx.from_pandas_edgelist(
-                self.edge_df, source="Source", target="Target", create_using=nx.Graph())
+                self.edge_df, source="Source", target="Target", create_using=nx.DiGraph())
         # Partition nodes into communities using Louvain algorithm
-        partition = best_partition(G)
+        partition = best_partition(G.to_undirected())
 
         # Calculate conductance values for each community
         conductance_values = self.calculate_conductance(G, partition)
@@ -287,48 +368,65 @@ class NetworkAnalysisGUI:
             self.Text_Panal.insert(tk.END," Node "+ f"{node} = {score:.4f}\n")
 
 
-    def visualize_graph(self,apply_nodeSize=False,apply_edges_weight=False, selected_option=""):
+    def visualize_graph(self, apply_nodeSize=False, apply_edges_weight=False, selected_option=""):
         # Create network graph from edge dataframe
         if (selected_option == 'Direct Graph'):
-            G = nx.from_pandas_edgelist(
-                self.edge_df, source="Source", target="Target", create_using=nx.DiGraph())
+            G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.DiGraph())
+            print("Diiiiiiiiirect")
         else:
-            G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.Graph())        
+            G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.Graph())
+            print("Undireeeect")
 
-        partition = best_partition(G)
+
+        partition = best_partition(G.to_undirected())
         edge_weights = self.edge_df.groupby(["Source", "Target"]).size().to_dict()
-        scalling_factor=220
+
         # Draw network graph with nodes colored by community
         pos = nx.spring_layout(G)
         cmap = plt.cm.tab20
         node_colors = [partition[node] for node in G.nodes()]
 
-        node_sizes = 100               # default value of node sizes
-        if apply_nodeSize:              # if the user wants to apply the node sizes
-            node_sizes = [G.degree(node)*5 for node in G.nodes()]
+        node_sizes = 250  # default value of node sizes
+        if apply_nodeSize:  # if the user wants to apply the node sizes
+            if len(G.nodes()) <= 50:
+                node_sizes = [G.degree(node) * 100 for node in G.nodes()]
+            else:
+                node_sizes = [G.degree(node) / 2 for node in G.nodes()]
 
         fig, ax = plt.subplots()
         nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax)
+
+        if len(G.edges()) <= 100:
+            w = 1
+            scalling_factor = 1
+        else:
+            w = 0.1
+            scalling_factor = 500
+
+
         if apply_edges_weight:
             if 'Weight' in self.edge_df.columns:
-                edges = nx.draw_networkx_edges(G, pos, ax=ax, width=self.edge_df['Weight']/5000, edge_color='black')
+                edges = nx.draw_networkx_edges(G, pos, ax=ax, width=self.edge_df['Weight'] / 5000, edge_color='black')
             else:
-                edges = nx.draw_networkx_edges(G, pos, ax=ax, width=[edge_weights.get((u, v),0.1)/scalling_factor for u, v in G.edges()], edge_color='black')
-        else: #for louvian Button
+                edges = nx.draw_networkx_edges(G, pos, ax=ax, width=[edge_weights.get((u, v), w) / scalling_factor for u, v in G.edges()], edge_color='black')
+        else:  # for louvian Button
             edges = nx.draw_networkx_edges(G, pos, ax=ax, width=0.1, edge_color='gray')
 
+
         labels = {node: node for node in G.nodes()}
-        nx.draw_networkx_labels(G, pos, labels=labels, font_size=5, ax=ax)
+        nx.draw_networkx_labels(G, pos, labels=labels, font_size=6, ax=ax)
+
+        if selected_option == 'Direct Graph':
+            nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_weights, label_pos=0.3, font_size=6, ax=ax)
+
         plt.title('Louvain algorithm')
         plt.colorbar(mappable=plt.cm.ScalarMappable(cmap=cmap), label="Community")
         plt.axis('off')
 
-        
         # Embed the plot in the GUI using a canvas
         canvas = FigureCanvasTkAgg(fig, master=self.master)
         canvas.draw()
-        canvas.get_tk_widget().place(relx=0.5, rely=0.5, anchor=tk.CENTER, width=800, height=600)
-
+        canvas.get_tk_widget().place(relx=0.497, rely=0.5, anchor=tk.CENTER, width=870, height=700)
 
     def filter_degree_centrality(self, selected_option):
         # Create network graph from edge dataframe
@@ -337,8 +435,6 @@ class NetworkAnalysisGUI:
                 self.edge_df, source="Source", target="Target", create_using=nx.DiGraph())
         else:
             G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.Graph())        
-
-        G = nx.Graph(G)
 
         # Compute degree centrality for each node and create a DataFrame to store the results
         degree_centrality = nx.degree_centrality(G)
@@ -361,12 +457,15 @@ class NetworkAnalysisGUI:
         # Set node color and size for filtered nodes
         cmap = plt.cm.tab20
         node_colors = '#C39BD3'
-        node_sizes = [G.degree(node) * 5 for node in filtered_nodes]
+        if (len(G.nodes()) <= 100):
+            node_sizes = 1000
+        else:
+            node_sizes = 250
 
         # Generate visualization
         pos = nx.spring_layout(filtered_G)
         fig, ax = plt.subplots()
-        nodes = nx.draw_networkx_nodes(filtered_G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax ,)
+        nodes = nx.draw_networkx_nodes(filtered_G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax )
         nx.draw_networkx_edges(filtered_G, pos, ax=ax)
         labels = {node: node for node in filtered_nodes}
         nx.draw_networkx_labels(filtered_G, pos, labels=labels, font_size=7, ax=ax)
@@ -391,8 +490,6 @@ class NetworkAnalysisGUI:
         else:
             G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.Graph())        
 
-        G = nx.Graph(G)
-
         # Compute degree centrality for each node and create a DataFrame to store the results
         betweenness_centrality = nx.betweenness_centrality(G)
 
@@ -407,7 +504,7 @@ class NetworkAnalysisGUI:
             user_input = float(user_input)
 
         # Filter nodes based on degree centrality
-        filtered_nodes = sorted([node for node in G.nodes() if betweenness_centrality[node] > user_input],
+        filtered_nodes = sorted([node for node in G.nodes() if betweenness_centrality[node] >= user_input],
                     key=lambda node: betweenness_centrality[node], reverse=True)
         # Create a new graph with only the filtered nodes
         filtered_G = G.subgraph(filtered_nodes)
@@ -415,12 +512,14 @@ class NetworkAnalysisGUI:
         # Set node color and size for filtered nodes
         cmap = plt.cm.tab20
         node_colors = '#F7DC6F'
-        node_sizes = [G.degree(node) * 5 for node in filtered_nodes]
-
+        if (len(G.nodes()) <= 100):
+            node_sizes = 1000
+        else:
+            node_sizes = 250
         # Generate visualization
         pos = nx.spring_layout(filtered_G)
         fig, ax = plt.subplots()
-        nodes = nx.draw_networkx_nodes(filtered_G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax ,)
+        nodes = nx.draw_networkx_nodes(filtered_G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax)
         nx.draw_networkx_edges(filtered_G, pos, ax=ax)
         labels = {node: node for node in filtered_nodes}
         nx.draw_networkx_labels(filtered_G, pos, labels=labels, font_size=7, ax=ax)
@@ -446,8 +545,6 @@ class NetworkAnalysisGUI:
         else:
             G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.Graph())
 
-        G = nx.Graph(G)
-
         # Compute degree centrality for each node and create a DataFrame to store the results
         eigenvector_centrality = nx.eigenvector_centrality(G)
 
@@ -462,7 +559,7 @@ class NetworkAnalysisGUI:
             user_input = float(user_input)
 
         # Filter nodes based on degree centrality
-        filtered_nodes = sorted([node for node in G.nodes() if eigenvector_centrality[node] > user_input],
+        filtered_nodes = sorted([node for node in G.nodes() if eigenvector_centrality[node] >= user_input],
                     key=lambda node: eigenvector_centrality[node], reverse=True)
         # Create a new graph with only the filtered nodes
         filtered_G = G.subgraph(filtered_nodes)
@@ -470,12 +567,14 @@ class NetworkAnalysisGUI:
         # Set node color and size for filtered nodes
         cmap = plt.cm.tab20
         node_colors = '#85C1E9'
-        node_sizes = [G.degree(node) * 5 for node in filtered_nodes]
-
+        if (len(G.nodes()) <= 100):
+            node_sizes = 1000
+        else:
+            node_sizes = 250
         # Generate visualization
         pos = nx.spring_layout(filtered_G)
         fig, ax = plt.subplots()
-        nodes = nx.draw_networkx_nodes(filtered_G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax ,)
+        nodes = nx.draw_networkx_nodes(filtered_G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax )
         nx.draw_networkx_edges(filtered_G, pos, ax=ax)
         labels = {node: node for node in filtered_nodes}
         nx.draw_networkx_labels(filtered_G, pos, labels=labels, font_size=7, ax=ax)
@@ -500,8 +599,6 @@ class NetworkAnalysisGUI:
         else:
             G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.Graph())
 
-        G = nx.Graph(G)
-
         # Compute degree centrality for each node and create a DataFrame to store the results
         harmonic_centrality = nx.harmonic_centrality(G)
 
@@ -516,7 +613,7 @@ class NetworkAnalysisGUI:
             user_input = float(user_input)
 
         # Filter nodes based on degree centrality
-        filtered_nodes = sorted([node for node in G.nodes() if harmonic_centrality[node] > user_input],
+        filtered_nodes = sorted([node for node in G.nodes() if harmonic_centrality[node] >= user_input],
                     key=lambda node: harmonic_centrality[node], reverse=True)
         # Create a new graph with only the filtered nodes
         filtered_G = G.subgraph(filtered_nodes)
@@ -524,12 +621,14 @@ class NetworkAnalysisGUI:
         # Set node color and size for filtered nodes
         cmap = plt.cm.tab20
         node_colors = '#F1948A'
-        node_sizes = [G.degree(node) * 5 for node in filtered_nodes]
-
+        if (len(G.nodes()) <= 100):
+            node_sizes = 1000
+        else:
+            node_sizes = 250
         # Generate visualization
         pos = nx.spring_layout(filtered_G)
         fig, ax = plt.subplots()
-        nodes = nx.draw_networkx_nodes(filtered_G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax ,)
+        nodes = nx.draw_networkx_nodes(filtered_G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax )
         nx.draw_networkx_edges(filtered_G, pos, ax=ax)
         labels = {node: node for node in filtered_nodes}
         nx.draw_networkx_labels(filtered_G, pos, labels=labels, font_size=7, ax=ax)
@@ -555,8 +654,6 @@ class NetworkAnalysisGUI:
         else:
             G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.Graph())
 
-        G = nx.Graph(G)
-
         # Compute degree centrality for each node and create a DataFrame to store the results
         closeness_centrality = nx.closeness_centrality(G)
 
@@ -572,7 +669,7 @@ class NetworkAnalysisGUI:
             user_input = float(user_input)
 
         # Filter nodes based on degree centrality
-        filtered_nodes = sorted([node for node in G.nodes() if closeness_centrality[node] > user_input],
+        filtered_nodes = sorted([node for node in G.nodes() if closeness_centrality[node] >= user_input],
                     key=lambda node: closeness_centrality[node], reverse=True)
         # Create a new graph with only the filtered nodes
         filtered_G = G.subgraph(filtered_nodes)
@@ -580,12 +677,14 @@ class NetworkAnalysisGUI:
         # Set node color and size for filtered nodes
         cmap = plt.cm.tab20
         node_colors = '#58D68D'
-        node_sizes = [G.degree(node) * 5 for node in filtered_nodes]
-
+        if (len(G.nodes()) <= 100):
+            node_sizes = 1000
+        else:
+            node_sizes = 250
         # Generate visualization
         pos = nx.spring_layout(filtered_G)
         fig, ax = plt.subplots()
-        nodes = nx.draw_networkx_nodes(filtered_G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax ,)
+        nodes = nx.draw_networkx_nodes(filtered_G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax )
         nx.draw_networkx_edges(filtered_G, pos, ax=ax)
         labels = {node: node for node in filtered_nodes}
         nx.draw_networkx_labels(filtered_G, pos, labels=labels, font_size=7, ax=ax)
