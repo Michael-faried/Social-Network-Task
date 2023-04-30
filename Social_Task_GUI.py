@@ -136,7 +136,15 @@ class NetworkAnalysisGUI:
         partition = best_partition(G)
         ground_truth_dict = dict(zip(ground_truth_file['ID'], ground_truth_file['Class']))
         # Calculate NMI between detected communities and ground truth communities
-        nmi = normalized_mutual_info_score(list(ground_truth_dict.values()), list(partition.values()))
+        #print(list(set(partition.values())))
+
+        # Convert ground truth values format to lists of integers
+        unique_labels = list(set(ground_truth_dict.values()))
+        labels_map = {label: i for i, label in enumerate(unique_labels)}
+        ground_truth_communites = [labels_map[ground_truth_dict[node]] for node in G.nodes()]
+        #print(list(set(ground_truth_communites)))
+
+        nmi = normalized_mutual_info_score(ground_truth_communites, list(partition.values()))
         # Delete existing text in the text widget
         self.Text_Panal.delete('1.0', tk.END)
         community ="NMI VALUE "
