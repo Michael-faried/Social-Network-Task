@@ -9,12 +9,12 @@ from tkinter import filedialog
 from tkinter import ttk
 from matplotlib.figure import Figure
 
+global selected_option
 class NetworkAnalysisGUI:
     def __init__(self, master):
         self.master = master
         master.title("Network Analysis GUI")
 
-        selected_option=None
         # Create frame for buttons on the left
         button_frame = tk.Frame(master, width=200,background="#58D68D")
         button_frame.pack(side=tk.LEFT, fill=tk.Y)
@@ -107,7 +107,6 @@ class NetworkAnalysisGUI:
         self.node_button_top.pack(side=tk.LEFT, padx=5,pady=(10,2))
 
         options = ['Direct Graph', 'Undirect Graph']
-
         # create a StringVar to hold the selected option
         selected_option = tk.StringVar()
         # set the default placeholder text
@@ -118,6 +117,7 @@ class NetworkAnalysisGUI:
             if selected_option.get() == 'Select Graph Type':
                 selected_option.set('')
 
+
         # create the ComboBox
         combo_box = ttk.Combobox(
             output_frame, textvariable=selected_option, values=options, state='readonly')
@@ -125,7 +125,7 @@ class NetworkAnalysisGUI:
         
         # add event binding to remove the placeholder text when the user clicks on the combo box
         combo_box.bind('<FocusIn>', on_click)
-
+        
 
         # Create text widget to display conductance values
         self.Text_Panal = tk.Text(output_frame, height=30, width=35,background="#D5F5E3")
@@ -167,10 +167,10 @@ class NetworkAnalysisGUI:
 # 2- Modularity internal evaluation
     def calculate_modularity(self, selected_option):
         """Calculates the modularity of the detected communities and prints the result."""
-        if (selected_option == 'Direct Graph'):
+        if (selected_option.get() == 'Direct Graph'):
             G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target",create_using=nx.DiGraph())
         else:
-            G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target",create_using=nx.DiGraph())
+            G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target",create_using=nx.Graph())
 
         communities=list(nx.algorithms.community.greedy_modularity_communities(G))
         modularity=nx.algorithms.community.modularity(G,communities)
@@ -189,7 +189,7 @@ class NetworkAnalysisGUI:
         and the ground truth communities, and prints the result."""
         # Load ground truth communities from CSV file
         ground_truth_file =self.node_df
-        if (selected_option == 'Direct Graph'):
+        if (selected_option.get() == 'Direct Graph'):
             G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target",create_using=nx.DiGraph())
         else:
             G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target",create_using=nx.Graph())
@@ -215,13 +215,13 @@ class NetworkAnalysisGUI:
     def calculate_community_coverage(self, selected_option):
         self.Text_Panal.delete('1.0', tk.END)
         """Calculates the coverage of each community and prints the result."""
-        if (selected_option == 'Direct Graph'):
+        if (selected_option.get() == 'Direct Graph'):
             G = nx.from_pandas_edgelist(
                 self.edge_df, source="Source", target="Target", create_using=nx.DiGraph())
         else:
             G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.Graph())        
 
-        partition = best_partition(G)
+        partition = best_partition(G.to_undirected())
 
         communities = set(partition.values())
         self.Text_Panal.insert(tk.END, "Communities coverage Values : \n\n")
@@ -269,12 +269,12 @@ class NetworkAnalysisGUI:
 
     def calculate_and_display_conductance(self, selected_option):
         # Create network graph from edge dataframe
-        if (selected_option == 'Direct Graph'):
+        if (selected_option.get() == 'Direct Graph'):
             G = nx.from_pandas_edgelist(
                 self.edge_df, source="Source", target="Target", create_using=nx.DiGraph())
         else:
             G = nx.from_pandas_edgelist(
-                self.edge_df, source="Source", target="Target", create_using=nx.DiGraph())
+                self.edge_df, source="Source", target="Target", create_using=nx.Graph())
         # Partition nodes into communities using Louvain algorithm
         partition = best_partition(G.to_undirected())
 
@@ -291,7 +291,7 @@ class NetworkAnalysisGUI:
 
     def calculate_pagerank(self, selected_option):
         """Calculates the PageRank score for each node in the graph and prints the result."""
-        if (selected_option == 'Direct Graph'):
+        if (selected_option.get() == 'Direct Graph'):
             G = nx.from_pandas_edgelist(
                 self.edge_df, source="Source", target="Target", create_using=nx.DiGraph())
         else:
@@ -306,12 +306,10 @@ class NetworkAnalysisGUI:
 
     def visualize_graph(self, apply_nodeSize=False, apply_edges_weight=False, selected_option=""):
         # Create network graph from edge dataframe
-        if (selected_option == 'Direct Graph'):
+        if (selected_option.get() == 'Direct Graph'):
             G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.DiGraph())
-            print("Diiiiiiiiirect")
         else:
             G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.Graph())
-            print("Undireeeect")
 
 
         partition = best_partition(G.to_undirected())
@@ -327,7 +325,7 @@ class NetworkAnalysisGUI:
             if len(G.nodes()) <= 50:
                 node_sizes = [G.degree(node) * 100 for node in G.nodes()]
             else:
-                node_sizes = [G.degree(node) / 2 for node in G.nodes()]
+                node_sizes = [G.degree(node) *5 for node in G.nodes()]
 
         fig, ax = plt.subplots()
         nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax)
@@ -366,11 +364,10 @@ class NetworkAnalysisGUI:
 
     def filter_degree_centrality(self, selected_option):
         # Create network graph from edge dataframe
-        if (selected_option == 'Direct Graph'):
-            G = nx.from_pandas_edgelist(
-                self.edge_df, source="Source", target="Target", create_using=nx.DiGraph())
+        if (selected_option.get() == 'Direct Graph'):
+            G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.DiGraph())
         else:
-            G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.Graph())        
+            G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.Graph())  
 
         # Compute degree centrality for each node and create a DataFrame to store the results
         degree_centrality = nx.degree_centrality(G)
@@ -392,7 +389,7 @@ class NetworkAnalysisGUI:
 
         # Set node color and size for filtered nodes
         cmap = plt.cm.tab20
-        node_colors = '#C39BD3'
+        node_colors = '#FC3131'
         if (len(G.nodes()) <= 100):
             node_sizes = 1000
         else:
@@ -402,7 +399,12 @@ class NetworkAnalysisGUI:
         pos = nx.spring_layout(filtered_G)
         fig, ax = plt.subplots()
         nodes = nx.draw_networkx_nodes(filtered_G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax )
-        nx.draw_networkx_edges(filtered_G, pos, ax=ax)
+        if (selected_option.get() == 'Direct Graph'):
+            for u, v, data in filtered_G.edges(data=True):
+                ax.annotate("", xy=pos[v], xytext=pos[u], arrowprops=dict(arrowstyle="->", color="Black"))
+        else:
+            nx.draw_networkx_edges(filtered_G, pos, ax=ax)
+
         labels = {node: node for node in filtered_nodes}
         nx.draw_networkx_labels(filtered_G, pos, labels=labels, font_size=7, ax=ax)
         plt.title(f'     Degree Centrality Greater {user_input}')
@@ -420,14 +422,14 @@ class NetworkAnalysisGUI:
 
     def filter_betweenness_centrality(self, selected_option):
         # Create network graph from edge dataframe
-        if (selected_option == 'Direct Graph'):
+        if (selected_option.get() == 'Direct Graph'):
             G = nx.from_pandas_edgelist(
                 self.edge_df, source="Source", target="Target", create_using=nx.DiGraph())
         else:
             G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.Graph())        
 
         # Compute degree centrality for each node and create a DataFrame to store the results
-        betweenness_centrality = nx.betweenness_centrality(G)
+        betweenness_centrality = nx.betweenness_centrality(G.to_undirected())
 
         df = pd.DataFrame(index=G.nodes())
         df.index.name = 'Node ID'
@@ -456,7 +458,11 @@ class NetworkAnalysisGUI:
         pos = nx.spring_layout(filtered_G)
         fig, ax = plt.subplots()
         nodes = nx.draw_networkx_nodes(filtered_G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax)
-        nx.draw_networkx_edges(filtered_G, pos, ax=ax)
+        if (selected_option.get() == 'Direct Graph'):
+            for u, v, data in filtered_G.edges(data=True):
+                ax.annotate("", xy=pos[v], xytext=pos[u], arrowprops=dict(arrowstyle="->", color="Black"))
+        else:
+            nx.draw_networkx_edges(filtered_G, pos, ax=ax)
         labels = {node: node for node in filtered_nodes}
         nx.draw_networkx_labels(filtered_G, pos, labels=labels, font_size=7, ax=ax)
         plt.title(f'     Betweeness Centrality Greater {user_input}')
@@ -475,14 +481,14 @@ class NetworkAnalysisGUI:
 
     def filter_eigenvector_centrality(self, selected_option):
         # Create network graph from edge dataframe
-        if (selected_option == 'Direct Graph'):
+        if (selected_option.get() == 'Direct Graph'):
             G = nx.from_pandas_edgelist(
                 self.edge_df, source="Source", target="Target", create_using=nx.DiGraph())
         else:
             G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.Graph())
 
         # Compute degree centrality for each node and create a DataFrame to store the results
-        eigenvector_centrality = nx.eigenvector_centrality(G)
+        eigenvector_centrality = nx.eigenvector_centrality(G.to_undirected())
 
         df1 = pd.DataFrame(index=G.nodes())
         df1.index.name = 'Node ID'
@@ -511,7 +517,11 @@ class NetworkAnalysisGUI:
         pos = nx.spring_layout(filtered_G)
         fig, ax = plt.subplots()
         nodes = nx.draw_networkx_nodes(filtered_G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax )
-        nx.draw_networkx_edges(filtered_G, pos, ax=ax)
+        if (selected_option.get() == 'Direct Graph'):
+            for u, v, data in filtered_G.edges(data=True):
+                ax.annotate("", xy=pos[v], xytext=pos[u], arrowprops=dict(arrowstyle="->", color="Black"))
+        else:
+            nx.draw_networkx_edges(filtered_G, pos, ax=ax)        
         labels = {node: node for node in filtered_nodes}
         nx.draw_networkx_labels(filtered_G, pos, labels=labels, font_size=7, ax=ax)
         plt.title(f'     Eigenvector Centrality Greater {user_input}')
@@ -529,14 +539,14 @@ class NetworkAnalysisGUI:
 
     def filter_harmonic_centrality(self, selected_option):
             # Create network graph from edge dataframe
-        if (selected_option == 'Direct Graph'):
+        if (selected_option.get() == 'Direct Graph'):
             G = nx.from_pandas_edgelist(
                 self.edge_df, source="Source", target="Target", create_using=nx.DiGraph())
         else:
             G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.Graph())
 
         # Compute degree centrality for each node and create a DataFrame to store the results
-        harmonic_centrality = nx.harmonic_centrality(G)
+        harmonic_centrality = nx.harmonic_centrality(G.to_undirected())
 
         df = pd.DataFrame(index=G.nodes())
         df.index.name = 'Node ID'
@@ -565,7 +575,11 @@ class NetworkAnalysisGUI:
         pos = nx.spring_layout(filtered_G)
         fig, ax = plt.subplots()
         nodes = nx.draw_networkx_nodes(filtered_G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax )
-        nx.draw_networkx_edges(filtered_G, pos, ax=ax)
+        if (selected_option.get() == 'Direct Graph'):
+            for u, v, data in filtered_G.edges(data=True):
+                ax.annotate("", xy=pos[v], xytext=pos[u], arrowprops=dict(arrowstyle="->", color="Black"))
+        else:
+            nx.draw_networkx_edges(filtered_G, pos, ax=ax)
         labels = {node: node for node in filtered_nodes}
         nx.draw_networkx_labels(filtered_G, pos, labels=labels, font_size=7, ax=ax)
         plt.title(f'   harmonic Centrality Greater {user_input}')
@@ -584,14 +598,14 @@ class NetworkAnalysisGUI:
 
     def filter_closeness_centrality(self, selected_option):
         # Create network graph from edge dataframe
-        if (selected_option == 'Direct Graph'):
+        if (selected_option.get() == 'Direct Graph'):
             G = nx.from_pandas_edgelist(
                 self.edge_df, source="Source", target="Target", create_using=nx.DiGraph())
         else:
             G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.Graph())
 
         # Compute degree centrality for each node and create a DataFrame to store the results
-        closeness_centrality = nx.closeness_centrality(G)
+        closeness_centrality = nx.closeness_centrality(G.to_undirected())
 
         df = pd.DataFrame(index=G.nodes())
         df.index.name = 'Node ID'
@@ -621,7 +635,11 @@ class NetworkAnalysisGUI:
         pos = nx.spring_layout(filtered_G)
         fig, ax = plt.subplots()
         nodes = nx.draw_networkx_nodes(filtered_G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax )
-        nx.draw_networkx_edges(filtered_G, pos, ax=ax)
+        if (selected_option.get() == 'Direct Graph'):
+            for u, v, data in filtered_G.edges(data=True):
+                ax.annotate("", xy=pos[v], xytext=pos[u], arrowprops=dict(arrowstyle="->", color="Black"))
+        else:
+            nx.draw_networkx_edges(filtered_G, pos, ax=ax)
         labels = {node: node for node in filtered_nodes}
         nx.draw_networkx_labels(filtered_G, pos, labels=labels, font_size=7, ax=ax)
         plt.title(f'       Closeness Centrality Greater {user_input}')
