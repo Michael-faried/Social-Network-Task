@@ -281,13 +281,18 @@ class NetworkAnalysisGUI:
         # Calculate conductance values for each community
         conductance_values = self.calculate_conductance(G, partition)
 
+    # Calculate average conductance across all communities
+        avg_conductance = sum(conductance_values.values()) / len(conductance_values)
+
         # Delete existing text in the text widget
         self.Text_Panal.delete('1.0', tk.END)
         self.Text_Panal.insert(tk.END," Community Conductance : \n \n")
         # Display conductance values for each community in the text widget
         for community, conductance in conductance_values.items():
             self.Text_Panal.insert(tk.END, f"{community} = {conductance:.4f}\n")
-
+    # Display average conductance across all communities
+        self.Text_Panal.insert(tk.END, f"\n Average Conductance = {avg_conductance:.4f}\n")
+    
 
     def calculate_pagerank(self, selected_option):
         """Calculates the PageRank score for each node in the graph and prints the result."""
@@ -322,10 +327,17 @@ class NetworkAnalysisGUI:
 
         node_sizes = 250  # default value of node sizes
         if apply_nodeSize:  # if the user wants to apply the node sizes
+            self.Text_Panal.delete('1.0', tk.END)
+            degree_dict = {node: G.degree(node) for node in G}
+            sorted_degrees = sorted(degree_dict.items(), key=lambda x: x[1], reverse=True)
+            for node, degree in sorted_degrees:
+                self.Text_Panal.insert(tk.END, f"Node {node} : {degree}\n")
+
             if len(G.nodes()) <= 50:
                 node_sizes = [G.degree(node) * 100 for node in G.nodes()]
             else:
                 node_sizes = [G.degree(node) *5 for node in G.nodes()]
+            
 
         fig, ax = plt.subplots()
         nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, cmap=cmap, ax=ax)
@@ -382,7 +394,7 @@ class NetworkAnalysisGUI:
             user_input = float(user_input)
 
         # Filter nodes based on degree centrality
-        filtered_nodes = sorted([node for node in G.nodes() if degree_centrality[node] > user_input],
+        filtered_nodes = sorted([node for node in G.nodes() if degree_centrality[node] >= user_input],
                     key=lambda node: degree_centrality[node], reverse=True)
         # Create a new graph with only the filtered nodes
         filtered_G = G.subgraph(filtered_nodes)
@@ -429,7 +441,7 @@ class NetworkAnalysisGUI:
             G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.Graph())        
 
         # Compute degree centrality for each node and create a DataFrame to store the results
-        betweenness_centrality = nx.betweenness_centrality(G.to_undirected())
+        betweenness_centrality = nx.betweenness_centrality(G)
 
         df = pd.DataFrame(index=G.nodes())
         df.index.name = 'Node ID'
@@ -488,7 +500,7 @@ class NetworkAnalysisGUI:
             G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.Graph())
 
         # Compute degree centrality for each node and create a DataFrame to store the results
-        eigenvector_centrality = nx.eigenvector_centrality(G.to_undirected())
+        eigenvector_centrality = nx.eigenvector_centrality(G)
 
         df1 = pd.DataFrame(index=G.nodes())
         df1.index.name = 'Node ID'
@@ -546,7 +558,7 @@ class NetworkAnalysisGUI:
             G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.Graph())
 
         # Compute degree centrality for each node and create a DataFrame to store the results
-        harmonic_centrality = nx.harmonic_centrality(G.to_undirected())
+        harmonic_centrality = nx.harmonic_centrality(G)
 
         df = pd.DataFrame(index=G.nodes())
         df.index.name = 'Node ID'
@@ -605,7 +617,7 @@ class NetworkAnalysisGUI:
             G = nx.from_pandas_edgelist(self.edge_df, source="Source", target="Target", create_using=nx.Graph())
 
         # Compute degree centrality for each node and create a DataFrame to store the results
-        closeness_centrality = nx.closeness_centrality(G.to_undirected())
+        closeness_centrality = nx.closeness_centrality(G)
 
         df = pd.DataFrame(index=G.nodes())
         df.index.name = 'Node ID'
