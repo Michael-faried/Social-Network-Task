@@ -1,6 +1,5 @@
 # Mini Social Networks Analysis Tool
 
-
 ## Community Detection Algorithm:
 ### 1. Louvain Algorithm
 A modularity-based algorithm for community detection in networks that optimizes the modularity score by iteratively moving nodes between communities to maximize modularity.
